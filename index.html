@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Art Market Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/globe.gl@2.27.0/dist/globe.gl.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root { 
+    --bg: #fff; 
+    --text: #111; 
+    --muted: #888; 
+    --light: #f0f0f0; 
+    --accent: #c41e1e; 
+    --green: #1a7f5a; 
+    --amber: #d4a012;
+    --gold: #b8860b;
+}
+html { font-size: 62.5%; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--text); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+.level { position: fixed; inset: 0; background: var(--bg); opacity: 0; visibility: hidden; transition: opacity 0.5s; overflow-y: auto; }
+.level.active { opacity: 1; visibility: visible; z-index: 10; }
+.back-btn { position: fixed; top: 24px; left: 24px; background: transparent; border: none; font-family: 'DM Mono', monospace; font-size: 1.2rem; letter-spacing: 0.15em; color: var(--muted); cursor: pointer; z-index: 100; transition: color 0.2s; text-transform: uppercase; }
+.back-btn:hover { color: var(--text); }
+
+.section-header { text-align: center; padding: 60px 24px 40px; }
+.section-main-title { font-family: 'Playfair Display', serif; font-size: clamp(2.8rem, 5vw, 4.5rem); font-weight: 900; letter-spacing: -0.02em; margin-bottom: 20px; line-height: 1.1; }
+.section-description { font-family: 'DM Mono', monospace; font-size: 1.4rem; font-weight: 300; color: #666; max-width: 700px; margin: 0 auto; line-height: 1.8; }
+
+/* INTRO */
+.intro { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4rem; text-align: center; background: #fafafa; position: relative; overflow: hidden; }
+.gold-glow { position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(184,134,11,0.12) 0%, rgba(184,134,11,0.05) 40%, transparent 70%); border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); transition: left 0.4s ease-out, top 0.4s ease-out; filter: blur(60px); }
+.intro::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(184,134,11,0.015) 0%, transparent 50%); animation: shimmer 20s linear infinite; }
+@keyframes shimmer { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.intro-label { font-family: 'DM Mono', monospace; font-size: 2.4rem; letter-spacing: 0.8em; text-transform: uppercase; color: var(--text); font-weight: 500; margin-top: 1.5rem; margin-bottom: 3rem; opacity: 0; animation: fadeIn 1s ease 0.5s forwards; }
+@keyframes fadeIn { to { opacity: 1; } }
+.intro h1 { font-family: 'Playfair Display', serif; font-size: clamp(5rem, 12vw, 10rem); font-weight: 900; letter-spacing: -0.03em; line-height: 0.9; margin-bottom: 1rem; }
+.intro h1 .word { display: inline-block; opacity: 0; animation: wordIn 0.8s ease forwards; }
+.intro h1 .word:nth-child(1) { animation-delay: 0.2s; }
+.intro h1 .word:nth-child(2) { animation-delay: 0.4s; }
+.intro h1 .word:nth-child(3) { animation-delay: 0.6s; }
+@keyframes wordIn { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
+.intro-subtitle { font-family: 'DM Mono', monospace; font-size: 1.6rem; font-weight: 300; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 3rem; opacity: 0; animation: fadeIn 1s ease 1s forwards; }
+.money-display { font-family: 'DM Mono', monospace; font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 500; margin-bottom: 0.8rem; background: linear-gradient(90deg, #8B7355, #b8860b, #d4a012, #b8860b, #8B7355); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; opacity: 0; animation: fadeIn 1s ease 1.2s forwards, goldShimmer 4s linear infinite; }
+@keyframes goldShimmer { 0% { background-position: 0% center; } 100% { background-position: 200% center; } }
+.intro-stat-label { font-family: 'DM Mono', monospace; font-size: 1.2rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--muted); margin-bottom: 4rem; opacity: 0; animation: fadeIn 1s ease 1.4s forwards; }
+.btn { padding: 22px 70px; background: var(--text); color: #fff; border: none; font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; cursor: pointer; transition: all 0.3s; opacity: 0; animation: fadeIn 1s ease 1.6s forwards; }
+.btn:hover { background: #333; transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0,0,0,0.15); }
+.btn-static { opacity: 1; animation: none; }
+
+/* BUDGET */
+.budget-section { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 0 3rem 5rem; }
+.charts-row { display: flex; gap: 50px; flex-wrap: wrap; justify-content: center; margin-bottom: 3rem; }
+.chart-card { background: transparent; padding: 28px; text-align: center; min-width: 300px; opacity: 0; animation: fadeInUp 0.6s ease forwards; }
+.chart-card:nth-child(1) { animation-delay: 0.2s; }
+.chart-card:nth-child(2) { animation-delay: 0.4s; }
+.chart-card:nth-child(3) { animation-delay: 0.6s; }
+@keyframes fadeInUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+.chart-title { font-family: 'DM Mono', monospace; font-size: 1.1rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text); margin-bottom: 24px; font-weight: 500; }
+.pie-chart { width: 200px; height: 200px; margin: 0 auto 24px; position: relative; border-radius: 50%; overflow: hidden; transition: transform 0.3s; animation: pieScale 0.8s ease forwards; transform: scale(0); }
+@keyframes pieScale { 0% { transform: scale(0) rotate(-180deg); } 100% { transform: scale(1) rotate(0deg); } }
+.pie-chart:hover { transform: scale(1.05); }
+.pie-chart-inner { width: 100%; height: 100%; position: relative; }
+.chart-legend { font-family: 'DM Mono', monospace; font-size: 1.2rem; text-align: left; max-width: 220px; margin: 0 auto; }
+.legend-item { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; opacity: 0; animation: fadeInUp 0.5s ease forwards; }
+.legend-item:nth-child(1) { animation-delay: 0.8s; }
+.legend-item:nth-child(2) { animation-delay: 0.9s; }
+.legend-item:nth-child(3) { animation-delay: 1s; }
+.legend-item:nth-child(4) { animation-delay: 1.1s; }
+.legend-dot { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+.legend-pct { font-weight: 500; margin-left: auto; }
+.market-context { max-width: 850px; margin: 0 auto 4rem; text-align: center; background: #fafafa; padding: 36px 48px; border: 1px solid var(--light); }
+.market-context p { font-family: 'DM Mono', monospace; font-size: 1.4rem; font-weight: 300; color: #555; line-height: 2; }
+.wealth-tier-title { font-family: 'Playfair Display', serif; font-size: clamp(2.8rem, 5vw, 4rem); font-weight: 900; letter-spacing: -0.02em; text-align: center; margin: 4rem 0 1.5rem; }
+.budget-instruction { font-family: 'DM Mono', monospace; font-size: 1.2rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); text-align: center; margin-bottom: 3rem; }
+
+.budget-grid { display: flex; gap: 4px; margin-bottom: 5rem; }
+.budget-card { background: var(--bg); border: 1px solid var(--light); padding: 4rem 4.5rem; text-align: center; cursor: pointer; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); min-width: 320px; }
+.budget-card:hover { background: var(--text); color: #fff; border-color: var(--text); transform: translateY(-10px) scale(1.02); box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+.budget-card:hover .budget-icon, .budget-card:hover .budget-label { color: rgba(255,255,255,0.5); }
+.budget-card:hover .budget-people { background: rgba(255,255,255,0.15); color: #fff; }
+.budget-icon { font-size: 4rem; margin-bottom: 1.5rem; color: var(--gold); transition: all 0.3s; animation: gentleFloat 4s ease-in-out infinite; }
+@keyframes gentleFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.budget-card:nth-child(2) .budget-icon { animation-delay: 0.5s; }
+.budget-card:nth-child(3) .budget-icon { animation-delay: 1s; }
+.budget-label { font-family: 'DM Mono', monospace; font-size: 1.1rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; transition: color 0.3s; }
+.budget-amount { font-family: 'Playfair Display', serif; font-size: 3.2rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 1.5rem; }
+.budget-people { font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 500; color: var(--text); background: #f5f5f5; padding: 14px 20px; border-radius: 4px; transition: all 0.3s; }
+.budget-people-num { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; display: block; margin-bottom: 4px; }
+
+/* COLLECTION */
+.collection-section { height: 100vh; display: flex; flex-direction: column; }
+.collection-header { padding: 18px 36px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--light); background: #fafafa; flex-shrink: 0; }
+.header-left { display: flex; align-items: center; gap: 36px; }
+.collection-title { font-family: 'Playfair Display', serif; font-size: 2.6rem; font-weight: 700; }
+.collection-subtitle { font-family: 'DM Mono', monospace; font-size: 1.1rem; color: var(--muted); margin-top: 2px; }
+.budget-display { text-align: right; background: var(--text); color: #fff; padding: 14px 24px; border-radius: 4px; }
+.budget-label-small { font-family: 'DM Mono', monospace; font-size: 0.9rem; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.7; }
+.budget-remaining { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; }
+.budget-remaining.negative { color: var(--accent); background: #fff; padding: 14px 24px; margin: -14px -24px; border-radius: 4px; }
+.grid-wrap { flex: 1; overflow-y: auto; padding: 28px 36px 100px 36px; background: #fafafa; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1200px; margin: 0 auto; }
+.card { cursor: pointer; transition: all 0.3s; position: relative; background: #fff; display: flex; flex-direction: column; }
+.card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+.card-img-wrap { position: relative; aspect-ratio: 4/3; overflow: hidden; background: #f8f8f8; border: 1px solid var(--light); }
+.card-img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.5s; }
+.card:hover .card-img { transform: scale(1.03); }
+.card-check { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(0.8); transition: all 0.3s; }
+.card-check svg { width: 10px; height: 10px; stroke: #fff; stroke-width: 2.5; }
+.card.selected .card-check { opacity: 1; transform: scale(1); }
+.card.selected .card-img-wrap { border-color: var(--green); box-shadow: 0 0 0 2px var(--green); }
+.card-info { padding: 14px; display: flex; flex-direction: column; flex: 1; border: 1px solid var(--light); border-top: none; }
+.card-artist { font-family: 'DM Mono', monospace; font-size: 0.95rem; font-weight: 500; color: var(--text); margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+.card-date { font-family: 'DM Mono', monospace; font-size: 0.9rem; color: var(--muted); margin-bottom: 4px; }
+.card-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 3px; line-height: 1.25; }
+.card-medium { font-family: 'DM Mono', monospace; font-size: 0.95rem; color: #666; margin-bottom: 10px; }
+.card-estimate-label { font-family: 'DM Mono', monospace; font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.card-estimate { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+.card-spacer { flex: 1; }
+.card-add-btn { padding: 12px 14px; background: transparent; border: 1px solid var(--text); font-family: 'DM Mono', monospace; font-size: 0.95rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.3s; width: 100%; font-weight: 500; margin-top: auto; }
+.card-add-btn:hover { background: var(--text); color: #fff; }
+.card.selected .card-add-btn { background: var(--green); color: #fff; border-color: var(--green); }
+
+.bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--text); color: #fff; padding: 20px 36px; display: flex; justify-content: space-between; align-items: center; transform: translateY(100%); transition: transform 0.4s; z-index: 50; }
+.bottom-bar.show { transform: translateY(0); }
+.bar-info { font-family: 'DM Mono', monospace; font-size: 1.4rem; }
+.bar-info strong { font-weight: 600; }
+.btn-checkout { padding: 18px 50px; background: #fff; color: var(--text); border: none; font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: all 0.3s; }
+.btn-checkout:hover { background: #f0f0f0; transform: scale(1.02); }
+
+/* MODAL */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: center; justify-content: center; padding: 24px; }
+.modal.show { display: flex; }
+.modal-panel { background: #fff; max-width: 900px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; }
+.modal-header { padding: 28px 36px 20px; border-bottom: 1px solid var(--light); flex-shrink: 0; }
+.modal-title { font-family: 'Playfair Display', serif; font-size: 3.2rem; font-weight: 900; line-height: 1.1; margin-bottom: 8px; }
+.modal-artist-date { font-family: 'DM Mono', monospace; font-size: 1.2rem; color: var(--muted); }
+.modal-artist-date span { margin-right: 20px; }
+.modal-body { display: grid; grid-template-columns: 380px 1fr; flex: 1; overflow: hidden; }
+.modal-img-wrap { background: #f8f8f8; display: flex; align-items: center; justify-content: center; padding: 36px; }
+.modal-img { max-width: 100%; max-height: 350px; object-fit: contain; }
+.modal-content { display: flex; flex-direction: column; overflow: hidden; }
+.modal-scroll { padding: 28px 36px; overflow-y: auto; flex: 1; }
+.modal-grey-box { background: #f5f5f5; padding: 20px 24px; margin-bottom: 20px; }
+.modal-price-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e0e0e0; }
+.modal-price-label { font-family: 'DM Mono', monospace; font-size: 1rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+.modal-price-value { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; }
+.modal-medium { font-family: 'DM Mono', monospace; font-size: 1.1rem; color: #666; }
+.modal-desc { font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 300; color: #444; line-height: 1.8; }
+.modal-reflection { font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 300; color: #666; line-height: 1.7; padding: 16px; background: #f8f8f8; border-left: 3px solid var(--muted); margin-top: 16px; }
+.forgery-warning, .disputed-warning { margin-bottom: 16px; padding: 16px 20px; border-left: 4px solid; }
+.forgery-warning { border-left-color: var(--accent); background: #fef2f2; }
+.disputed-warning { border-left-color: var(--amber); background: #fffbeb; }
+.warning-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.warning-icon { font-size: 16px; }
+.warning-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; }
+.forgery-warning .warning-title { color: var(--accent); }
+.disputed-warning .warning-title { color: var(--amber); }
+.warning-text { font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 300; line-height: 1.6; color: #555; }
+.section-label { font-family: 'DM Mono', monospace; font-size: 0.95rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; margin-top: 20px; }
+.timeline { padding-left: 18px; border-left: 2px solid var(--light); }
+.timeline-item { padding-bottom: 10px; position: relative; }
+.timeline-item::before { content: ''; position: absolute; left: -24px; top: 5px; width: 10px; height: 10px; background: var(--text); border-radius: 50%; }
+.timeline-year { font-family: 'DM Mono', monospace; font-weight: 500; font-size: 1.1rem; }
+.timeline-text { font-family: 'DM Mono', monospace; font-size: 1.05rem; font-weight: 300; color: #666; }
+.modal-actions { display: flex; gap: 12px; padding: 20px 36px; border-top: 1px solid var(--light); background: #fff; flex-shrink: 0; }
+.modal-btn { flex: 1; padding: 16px 28px; border: none; font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+.modal-btn.outline { background: transparent; border: 1px solid var(--light); }
+.modal-btn.outline:hover { border-color: var(--text); background: #fafafa; }
+.modal-btn.fill { background: var(--text); color: #fff; }
+.modal-btn.fill:hover { background: #333; }
+.modal-btn.fill.added { background: var(--green); }
+
+/* BIDDING - IMPROVED LAYOUT */
+.bidding-section { min-height: 100vh; display: flex; flex-direction: column; background: #fafafa; }
+.bidding-header { padding: 28px 36px; text-align: center; background: #fff; border-bottom: 1px solid var(--light); flex-shrink: 0; }
+.bidding-title { font-family: 'Playfair Display', serif; font-size: clamp(2.8rem, 5vw, 4rem); font-weight: 900; letter-spacing: -0.02em; margin-bottom: 10px; }
+.bidding-subtitle { font-family: 'DM Mono', monospace; font-size: 1.3rem; color: #666; }
+.bidding-container { flex: 1; overflow-y: auto; padding: 36px; display: flex; justify-content: center; align-items: flex-start; }
+.bid-panel { background: #fff; border: 1px solid var(--light); max-width: 1000px; width: 100%; display: flex; }
+.bid-img-section { flex: 0 0 45%; background: #f8f8f8; display: flex; align-items: center; justify-content: center; padding: 36px; border-right: 1px solid var(--light); }
+.bid-img { max-width: 100%; max-height: 380px; object-fit: contain; }
+.bid-right-section { flex: 1; padding: 32px; display: flex; flex-direction: column; }
+.bid-artwork-header { padding-bottom: 20px; border-bottom: 1px solid var(--light); margin-bottom: 20px; }
+.bid-lot { font-family: 'DM Mono', monospace; font-size: 1rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
+.bid-artwork-title { font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 900; margin-bottom: 6px; line-height: 1.15; }
+.bid-artwork-artist { font-family: 'DM Mono', monospace; font-size: 1.2rem; color: var(--muted); }
+.estimate-display { background: #fafafa; border: 1px solid var(--light); padding: 16px 20px; margin-bottom: 24px; text-align: center; }
+.estimate-label { font-family: 'DM Mono', monospace; font-size: 0.9rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.estimate-value { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; }
+
+.slider-section { background: #fff; border: 1px solid var(--light); padding: 24px; margin-bottom: 24px; }
+.slider-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; text-align: center; margin-bottom: 6px; }
+.slider-helper { font-family: 'DM Mono', monospace; font-size: 1.1rem; color: var(--muted); text-align: center; margin-bottom: 20px; }
+.slider-range-labels { display: flex; justify-content: space-between; margin-bottom: 12px; }
+.range-label { font-family: 'DM Mono', monospace; font-size: 1rem; color: var(--muted); padding: 6px 10px; background: #f5f5f5; }
+.range-label-title { font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.7; display: block; margin-bottom: 2px; }
+.slider-container { position: relative; margin-bottom: 8px; }
+.slider-input { width: 100%; height: 48px; -webkit-appearance: none; appearance: none; background: transparent; outline: none; cursor: pointer; }
+.slider-input::-webkit-slider-track { width: 100%; height: 48px; background: #f5f5f5; border: 2px solid var(--text); }
+.slider-input::-webkit-slider-thumb { -webkit-appearance: none; width: 36px; height: 36px; background: var(--text); border: 3px solid #fff; border-radius: 50%; cursor: grab; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+.slider-input::-webkit-slider-thumb:active { cursor: grabbing; }
+.slider-input::-moz-range-track { width: 100%; height: 48px; background: #f5f5f5; border: 2px solid var(--text); }
+.slider-input::-moz-range-thumb { width: 36px; height: 36px; background: var(--text); border: 3px solid #fff; border-radius: 50%; cursor: grab; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+.actual-marker-wrapper { position: relative; height: 0; margin-top: -48px; pointer-events: none; }
+.actual-marker { position: absolute; width: 3px; height: 48px; background: var(--accent); display: none; transform: translateX(-50%); }
+.actual-marker.show { display: block; }
+.actual-label { position: absolute; bottom: 56px; left: 50%; transform: translateX(-50%); font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: 700; color: #fff; white-space: nowrap; background: var(--accent); padding: 6px 12px; }
+
+.feedback { padding: 20px; margin-bottom: 24px; display: none; text-align: center; border: 1px solid var(--light); }
+.feedback.show { display: block; }
+.feedback.correct { background: #e8f5e9; border-color: var(--green); }
+.feedback.wrong { background: #ffebee; border-color: var(--accent); }
+.feedback-title { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 1.8rem; margin-bottom: 6px; }
+.feedback.correct .feedback-title { color: var(--green); }
+.feedback.wrong .feedback-title { color: var(--accent); }
+.feedback-msg { font-family: 'DM Mono', monospace; font-size: 1.1rem; color: #666; }
+.feedback-real-price { font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 900; margin: 10px 0; }
+.feedback-pct { font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 500; }
+
+.bid-actions { display: flex; gap: 16px; margin-top: auto; padding-top: 20px; border-top: 1px solid var(--light); }
+.bid-btn { flex: 1; padding: 20px; border: none; font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; background: var(--text); color: #fff; transition: all 0.3s; }
+.bid-btn:hover { background: #333; }
+.bid-btn.next-btn { background: var(--green); }
+.bid-btn.next-btn:hover { background: #156b4d; }
+
+/* PAYMENT */
+.payment-overlay { position: fixed; inset: 0; background: #fff; z-index: 300; display: none; align-items: center; justify-content: center; }
+.payment-overlay.show { display: flex; }
+.payment-card { text-align: center; max-width: 420px; padding: 50px; }
+.payment-icon { width: 90px; height: 90px; border: 2px solid var(--light); border-radius: 50%; margin: 0 auto 36px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.payment-icon.processing { border-color: var(--text); }
+.payment-icon.processing::before { content: ''; position: absolute; width: 100%; height: 100%; background: conic-gradient(var(--text) 0deg, transparent 60deg, transparent 300deg, var(--text) 360deg); animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.payment-icon.processing::after { content: ''; position: absolute; width: 80px; height: 80px; background: #fff; border-radius: 50%; }
+.payment-icon.success { border-color: var(--green); background: var(--green); }
+.payment-icon.success::before, .payment-icon.success::after { display: none; }
+.payment-icon.failure { border-color: var(--accent); background: var(--accent); }
+.payment-icon.failure::before, .payment-icon.failure::after { display: none; }
+.payment-checkmark { display: none; }
+.payment-icon.success .payment-checkmark, .payment-icon.failure .payment-checkmark { display: block; color: #fff; font-size: 36px; }
+.payment-title { font-family: 'Playfair Display', serif; font-size: 2.6rem; font-weight: 700; margin-bottom: 14px; }
+.payment-text { font-family: 'DM Mono', monospace; font-size: 1.2rem; color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
+.payment-amount { font-family: 'Playfair Display', serif; font-size: 4rem; font-weight: 900; margin-bottom: 10px; }
+.payment-details { font-family: 'DM Mono', monospace; font-size: 1.2rem; color: var(--muted); margin-bottom: 36px; }
+.payment-steps { font-family: 'DM Mono', monospace; font-size: 1.1rem; color: var(--muted); }
+
+/* RECEIPT */
+.receipt-section { min-height: 100vh; padding: 40px 24px 80px; background: #fafafa; }
+.receipt-section .section-header { padding: 40px 24px 30px; }
+.receipt-container { max-width: 620px; margin: 0 auto; }
+.receipt-paper { background: #fff; border: 1px solid var(--light); padding: 44px; margin-bottom: 28px; position: relative; overflow: hidden; }
+.receipt-paper::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #111, #b8860b, #111); background-size: 200% 100%; animation: receiptShine 3s linear infinite; }
+@keyframes receiptShine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.receipt-header { text-align: center; padding-bottom: 28px; border-bottom: 2px dashed var(--text); margin-bottom: 28px; }
+.receipt-logo { font-family: 'Playfair Display', serif; font-size: 2.6rem; font-weight: 900; margin-bottom: 10px; }
+.receipt-date { font-family: 'DM Mono', monospace; font-size: 1.1rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+.receipt-item { display: flex; justify-content: space-between; padding: 14px 0; font-family: 'DM Mono', monospace; font-size: 1.2rem; border-bottom: 1px dotted #ddd; }
+.receipt-item .name { flex: 1; font-weight: 300; padding-right: 16px; }
+.receipt-item .price { font-weight: 500; white-space: nowrap; }
+.receipt-subtotal { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--text); }
+.receipt-fee { background: #fafafa; padding: 16px; margin: 18px 0; font-family: 'DM Mono', monospace; font-size: 1.1rem; }
+.receipt-total { display: flex; justify-content: space-between; font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 900; padding: 24px 0; border-top: 2px solid var(--text); border-bottom: 2px dashed var(--text); }
+
+.freeport-btn { display: block; width: 100%; background: var(--text); color: #fff; text-align: center; padding: 22px; font-family: 'DM Mono', monospace; font-size: 1.2rem; letter-spacing: 0.2em; text-transform: uppercase; border: none; cursor: pointer; margin-top: 28px; transition: all 0.3s; font-weight: 500; position: relative; overflow: hidden; }
+.freeport-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); animation: btnShine 2s ease-in-out infinite; }
+@keyframes btnShine { 0%, 100% { left: -100%; } 50% { left: 100%; } }
+.freeport-btn:hover { background: #333; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.receipt-footer { text-align: center; padding-top: 28px; border-top: 2px dashed #ddd; margin-top: 28px; font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 300; color: var(--muted); line-height: 1.9; }
+
+.comparison-section { margin-bottom: 32px; background: #fff; border: 1px solid var(--light); padding: 36px; }
+.comparison-header { text-align: center; margin-bottom: 32px; }
+.comparison-title { font-family: 'Playfair Display', serif; font-size: 2.6rem; font-weight: 700; margin-bottom: 10px; }
+.comparison-subtitle { font-family: 'DM Mono', monospace; font-size: 1.2rem; color: var(--muted); }
+.comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.comparison-card { background: #fafafa; border: 1px solid var(--light); padding: 28px; text-align: center; transition: all 0.3s; }
+.comparison-card:hover { border-color: var(--text); transform: translateY(-4px); }
+.comparison-icon { width: 52px; height: 52px; margin: 0 auto 18px; display: flex; align-items: center; justify-content: center; animation: gentlePulse 3s ease-in-out infinite; }
+@keyframes gentlePulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.9; } }
+.comparison-card:nth-child(2) .comparison-icon { animation-delay: 0.5s; }
+.comparison-card:nth-child(3) .comparison-icon { animation-delay: 1s; }
+.comparison-card:nth-child(4) .comparison-icon { animation-delay: 1.5s; }
+.comparison-icon svg { width: 100%; height: 100%; stroke: var(--text); stroke-width: 1.5; fill: none; }
+.comparison-num { font-family: 'Playfair Display', serif; font-size: 3.4rem; font-weight: 900; }
+.comparison-label { font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-top: 10px; }
+.comparison-text { font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 300; color: #666; margin-top: 6px; }
+
+.tax-savings-box { background: #f0fdf4; border: 1px solid var(--green); padding: 28px; margin: 36px 0; text-align: center; position: relative; overflow: hidden; }
+.tax-savings-box::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(26,127,90,0.05) 0%, transparent 50%); animation: taxGlow 4s ease-in-out infinite; }
+@keyframes taxGlow { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } }
+.tax-savings-label { font-family: 'DM Mono', monospace; font-size: 1.1rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--green); margin-bottom: 10px; position: relative; z-index: 1; }
+.tax-savings-amount { font-family: 'Playfair Display', serif; font-size: 4rem; font-weight: 900; color: var(--green); margin-bottom: 6px; position: relative; z-index: 1; }
+.tax-savings-desc { font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 300; color: #555; position: relative; z-index: 1; }
+
+.receipt-actions { display: flex; flex-direction: column; gap: 14px; }
+.receipt-btn { width: 100%; padding: 22px; border: none; font-family: 'DM Mono', monospace; font-size: 1.3rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; }
+.receipt-btn.primary { background: var(--text); color: #fff; }
+.receipt-btn.primary::before { content: '→'; position: absolute; right: 24px; top: 50%; transform: translateY(-50%); font-size: 1.6rem; opacity: 0; transition: all 0.3s; }
+.receipt-btn.primary:hover { padding-right: 50px; }
+.receipt-btn.primary:hover::before { opacity: 1; right: 20px; }
+.receipt-btn.primary:hover { background: #333; }
+.receipt-btn.outline { background: transparent; border: 2px solid var(--light); color: var(--muted); font-size: 1.1rem; padding: 18px; }
+.receipt-btn.outline:hover { border-color: var(--text); color: var(--text); }
+
+/* FREEPORT MODAL */
+.freeport-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 300; display: none; align-items: center; justify-content: center; padding: 24px; }
+.freeport-modal.show { display: flex; }
+.freeport-panel { background: #fff; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; }
+.shipping-header { background: var(--text); color: #fff; padding: 36px; text-align: center; }
+.shipping-header h2 { font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 700; margin-bottom: 10px; }
+.shipping-header p { font-family: 'DM Mono', monospace; font-size: 1.2rem; opacity: 0.8; }
+.globe-container { height: 400px; background: linear-gradient(180deg, #111 0%, #1a1a1a 100%); position: relative; overflow: hidden; }
+#globeViz { width: 100%; height: 100%; }
+.transit-overlay { position: absolute; bottom: 24px; left: 0; right: 0; text-align: center; pointer-events: none; }
+.transit-route-label { font-family: 'DM Mono', monospace; font-size: 1.1rem; letter-spacing: 0.2em; color: #fff; background: rgba(0,0,0,0.7); padding: 14px 28px; }
+.shipping-tracker { padding: 36px; border-bottom: 1px solid var(--light); }
+.tracker-title { font-family: 'DM Mono', monospace; font-size: 1.1rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 24px; }
+.tracker-timeline { position: relative; padding-left: 36px; }
+.tracker-line { position: absolute; left: 11px; top: 10px; bottom: 10px; width: 3px; background: var(--light); }
+.tracker-line-fill { position: absolute; left: 11px; top: 10px; width: 3px; background: var(--green); height: 0%; transition: height 1.5s ease-out; }
+.tracker-step { position: relative; padding-bottom: 28px; opacity: 0.4; transition: opacity 0.5s; }
+.tracker-step:last-child { padding-bottom: 0; }
+.tracker-step.active { opacity: 1; }
+.tracker-dot { position: absolute; left: -30px; top: 6px; width: 18px; height: 18px; border-radius: 50%; background: var(--light); border: 3px solid #fff; transition: background 0.5s; }
+.tracker-step.complete .tracker-dot { background: var(--green); }
+.tracker-step.active .tracker-dot { background: var(--green); box-shadow: 0 0 0 6px rgba(26,127,90,0.2); }
+.tracker-date { font-family: 'DM Mono', monospace; font-size: 1.1rem; color: var(--muted); }
+.tracker-text { font-family: 'DM Mono', monospace; font-size: 1.5rem; font-weight: 500; }
+.tracker-sub { font-family: 'DM Mono', monospace; font-size: 1.2rem; color: #666; }
+.freeport-info { padding: 36px; }
+.freeport-stat { font-family: 'Playfair Display', serif; font-size: 4.5rem; font-weight: 700; color: var(--green); margin-bottom: 14px; text-align: center; }
+.freeport-stat-label { font-family: 'DM Mono', monospace; font-size: 1.1rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); text-align: center; margin-bottom: 24px; }
+.freeport-text { font-family: 'DM Mono', monospace; font-size: 1.3rem; font-weight: 300; color: #666; line-height: 1.9; margin-bottom: 24px; }
+.freeport-list { margin-bottom: 32px; }
+.freeport-item { display: flex; align-items: flex-start; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--light); font-family: 'DM Mono', monospace; font-size: 1.3rem; }
+.freeport-item span { color: var(--green); font-weight: 600; font-size: 1.6rem; }
+.freeport-close { width: 100%; padding: 18px; background: var(--text); color: #fff; border: none; font-family: 'DM Mono', monospace; font-size: 1.1rem; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: background 0.3s; }
+.freeport-close:hover { background: #333; }
+
+/* TAX GUIDE */
+.tax-section { min-height: 100vh; padding: 0 24px 60px; }
+.tax-container { max-width: 680px; margin: 0 auto; }
+.tax-calculation-display { background: #fff; border: 1px solid var(--light); padding: 36px 44px; margin-bottom: 36px; position: relative; overflow: hidden; }
+.tax-calculation-display::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--accent), var(--green), var(--accent)); background-size: 200% 100%; animation: taxCalcShine 4s linear infinite; }
+@keyframes taxCalcShine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.tax-calc-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px dashed var(--light); font-family: 'DM Mono', monospace; font-size: 1.4rem; }
+.tax-calc-row:last-child { border-bottom: none; padding-top: 24px; border-top: 2px solid var(--green); margin-top: 12px; }
+.tax-calc-label { display: flex; align-items: center; gap: 14px; }
+.tax-calc-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: var(--light); border-radius: 50%; font-size: 1.2rem; }
+.tax-calc-value { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; }
+.tax-calc-row:last-child .tax-calc-label { font-size: 1.6rem; font-weight: 600; color: var(--green); }
+.tax-calc-row:last-child .tax-calc-value { font-size: 3.4rem; color: var(--green); }
+.tax-calc-percentage { font-size: 1.1rem; opacity: 0.7; margin-left: 8px; }
+.tax-intro { background: #fef2f2; border: 1px solid var(--accent); padding: 24px; margin-bottom: 28px; text-align: center; }
+.tax-intro .big-stat { font-family: 'Playfair Display', serif; font-size: 5rem; font-weight: 900; color: var(--accent); margin-bottom: 10px; }
+.tax-intro p { font-family: 'DM Mono', monospace; font-size: 1.2rem; color: #666; line-height: 1.8; }
+.tax-intro strong { color: var(--accent); font-weight: 500; }
+.tax-step { background: #fff; border: 1px solid var(--light); margin-bottom: 18px; display: flex; transition: all 0.3s; }
+.tax-step:hover { border-color: var(--text); transform: translateX(4px); }
+.step-icon { width: 90px; background: #fafafa; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border-right: 1px solid var(--light); }
+.step-icon svg { width: 36px; height: 36px; stroke: var(--text); stroke-width: 1.5; fill: none; }
+.step-content { padding: 24px 28px; flex: 1; }
+.step-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 600; margin-bottom: 6px; }
+.step-stat { font-family: 'DM Mono', monospace; font-size: 1.4rem; font-weight: 500; color: var(--green); margin-bottom: 10px; }
+.step-text { font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 300; color: #666; line-height: 1.7; }
+.tax-cta { text-align: center; margin-top: 40px; }
+
+@media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 20px; } .bid-panel { flex-direction: column; } .bid-img-section { border-right: none; border-bottom: 1px solid var(--light); } }
+@media (max-width: 600px) { .budget-grid { flex-direction: column; } .grid { grid-template-columns: 1fr; } .modal-body { grid-template-columns: 1fr; } .comparison-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="payment-overlay" id="paymentOverlay">
+<div class="payment-card">
+<div class="payment-icon" id="paymentIcon"><span class="payment-checkmark" id="paymentCheck">✓</span></div>
+<div class="payment-title" id="paymentTitle">Processing Payment</div>
+<div class="payment-text" id="paymentText">Please wait while we process your transaction</div>
+<div class="payment-amount" id="paymentAmount"></div>
+<div class="payment-details" id="paymentDetails"></div>
+<div class="payment-steps" id="paymentSteps">Verifying payment method...</div>
+</div>
+</div>
+
+<div class="level active" id="intro">
+<div class="intro" id="introSection">
+<div class="gold-glow" id="goldGlow"></div>
+<h1><span class="word">The</span> <span class="word">Art</span> <span class="word">Market</span></h1>
+<div class="intro-label">Simulator</div>
+<div class="intro-subtitle">Experience Hoarding at the Highest Level</div>
+<div class="money-display">$<span class="money-counter" id="moneyCounter">0</span></div>
+<div class="intro-stat-label">Global Art Market 2024</div>
+<button class="btn" onclick="goTo('budget')">Enter the Market</button>
+</div>
+</div>
+
+<div class="level" id="budget">
+<button class="back-btn" onclick="goTo('intro')">← Back</button>
+<div class="budget-section">
+<div class="section-header">
+<h2 class="section-main-title">How to Manipulate the Market</h2>
+</div>
+<div class="charts-row">
+<div class="chart-card">
+<div class="chart-title">Top Auction Houses (2020)</div>
+<div class="pie-chart">
+<div class="pie-chart-inner" style="background: conic-gradient(#111 0deg 144deg, #555 144deg 288deg, #ccc 288deg 360deg);"></div>
+</div>
+<div class="chart-legend">
+<div class="legend-item"><span class="legend-dot" style="background:#111"></span><span>Christie's</span><span class="legend-pct">40%</span></div>
+<div class="legend-item"><span class="legend-dot" style="background:#555"></span><span>Sotheby's</span><span class="legend-pct">40%</span></div>
+<div class="legend-item"><span class="legend-dot" style="background:#ccc"></span><span>All Others</span><span class="legend-pct">20%</span></div>
+</div>
+</div>
+<div class="chart-card">
+<div class="chart-title">Sales by Region (82% in 3 markets)</div>
+<div class="pie-chart">
+<div class="pie-chart-inner" style="background: conic-gradient(#111 0deg 147.6deg, #444 147.6deg 241.2deg, #777 241.2deg 295.2deg, #ccc 295.2deg 360deg);"></div>
+</div>
+<div class="chart-legend">
+<div class="legend-item"><span class="legend-dot" style="background:#111"></span><span>USA</span><span class="legend-pct">41%</span></div>
+<div class="legend-item"><span class="legend-dot" style="background:#444"></span><span>UK</span><span class="legend-pct">26%</span></div>
+<div class="legend-item"><span class="legend-dot" style="background:#777"></span><span>China</span><span class="legend-pct">15%</span></div>
+<div class="legend-item"><span class="legend-dot" style="background:#ccc"></span><span>Rest of World</span><span class="legend-pct">18%</span></div>
+</div>
+</div>
+<div class="chart-card">
+<div class="chart-title">Dealer Buyer Concentration</div>
+<div class="pie-chart">
+<div class="pie-chart-inner" style="background: conic-gradient(#111 0deg 154.8deg, #666 154.8deg 257.4deg, #ccc 257.4deg 360deg);"></div>
+</div>
+<div class="chart-legend">
+<div class="legend-item"><span class="legend-dot" style="background:#111"></span><span>Fewer than 20 buyers</span><span class="legend-pct">43%</span></div>
+<div class="legend-item"><span class="legend-dot" style="background:#666"></span><span>20-50 buyers</span><span class="legend-pct">28.5%</span></div>
+<div class="legend-item"><span class="legend-dot" style="background:#ccc"></span><span>50+ buyers</span><span class="legend-pct">28.5%</span></div>
+</div>
+</div>
+</div>
+<div class="market-context">
+<p>A concentrated market controlled by a small elite of collectors, dealers, and auction houses. Despite its prominence, the majority of the market is composed of a small collection of dealers and auctioneers catering to an exclusive list of ultra-rich clientele. Of the ten highest priced sales in 2020, eight occurred at either Christie's or Sotheby's.</p>
+</div>
+<h2 class="wealth-tier-title">Select Your Wealth Tier</h2>
+<div class="budget-instruction">Click to select your budget</div>
+<div class="budget-grid">
+<div class="budget-card" onclick="selectBudget(100000000)">
+<div class="budget-icon">◇</div>
+<div class="budget-label">Centi-Millionaire</div>
+<div class="budget-amount">£100,000,000</div>
+<div class="budget-people"><span class="budget-people-num">28,420</span>people worldwide</div>
+</div>
+<div class="budget-card" onclick="selectBudget(1000000000)">
+<div class="budget-icon">◆</div>
+<div class="budget-label">Billionaire</div>
+<div class="budget-amount">£1,000,000,000</div>
+<div class="budget-people"><span class="budget-people-num">2,781</span>people worldwide</div>
+</div>
+<div class="budget-card" onclick="selectBudget(100000000000)">
+<div class="budget-icon">✦</div>
+<div class="budget-label">Ultra Elite</div>
+<div class="budget-amount">£100,000,000,000</div>
+<div class="budget-people"><span class="budget-people-num">18</span>people worldwide</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="level" id="collection">
+<div class="collection-section">
+<div class="collection-header">
+<div class="header-left">
+<button class="back-btn" style="position:static" onclick="goTo('budget')">← Back</button>
+<div>
+<div class="collection-title">Shop the Collection</div>
+<div class="collection-subtitle">View estimates — Guess actual sale prices in next step</div>
+</div>
+</div>
+<div class="budget-display">
+<div class="budget-label-small">Your Budget</div>
+<div class="budget-remaining" id="budgetRemaining">£100,000,000</div>
+</div>
+</div>
+<div class="grid-wrap"><div class="grid" id="grid"></div></div>
+</div>
+</div>
+
+<div class="bottom-bar" id="bottomBar">
+<div class="bar-info"><strong><span id="selectedCount">0</span> items</strong> selected for auction</div>
+<button class="btn-checkout" onclick="startBidding()">Proceed to Auction</button>
+</div>
+
+<div class="modal" id="detailModal">
+<div class="modal-panel">
+<div class="modal-header">
+<div class="modal-title" id="modalTitle"></div>
+<div class="modal-artist-date"><span id="modalArtist"></span><span id="modalDate"></span></div>
+</div>
+<div class="modal-body">
+<div class="modal-img-wrap"><img id="modalImg" class="modal-img"></div>
+<div class="modal-content">
+<div class="modal-scroll">
+<div class="modal-grey-box">
+<div class="modal-price-row"><span class="modal-price-label">Auction Estimate</span><span class="modal-price-value" id="modalPrice"></span></div>
+<div class="modal-medium" id="modalMedium"></div>
+</div>
+<div class="modal-desc" id="modalDesc"></div>
+<div class="modal-reflection" id="modalReflection" style="display:none"></div>
+<div class="forgery-warning" id="forgeryWarning" style="display:none">
+<div class="warning-header"><span class="warning-icon">⚠</span><h3 class="warning-title">Forgery Detected</h3></div>
+<p class="warning-text" id="forgeryText"></p>
+</div>
+<div class="disputed-warning" id="disputedWarning" style="display:none">
+<div class="warning-header"><span class="warning-icon">⚠</span><h3 class="warning-title">Attribution Disputed</h3></div>
+<p class="warning-text" id="disputedText"></p>
+</div>
+<div class="section-label">Provenance</div>
+<div class="timeline" id="modalTimeline"></div>
+</div>
+<div class="modal-actions">
+<button class="modal-btn outline" onclick="closeModal()">Close</button>
+<button class="modal-btn fill" id="modalSelectBtn" onclick="toggleFromModal()">Add to Cart</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="level" id="bidding">
+<button class="back-btn" onclick="goTo('collection')">← Back</button>
+<div class="bidding-section">
+<div class="bidding-header">
+<h1 class="bidding-title">Guess the Sale Price</h1>
+<p class="bidding-subtitle">You selected these artworks. Now predict what they actually sold for at auction.</p>
+</div>
+<div class="bidding-container">
+<div class="bid-panel">
+<div class="bid-img-section"><img id="bidImg" class="bid-img"></div>
+<div class="bid-right-section">
+<div class="bid-artwork-header">
+<div class="bid-lot">Lot <span id="lotNum">1</span> of <span id="lotTotal">2</span></div>
+<h2 class="bid-artwork-title" id="bidTitle"></h2>
+<div class="bid-artwork-artist" id="bidArtist"></div>
+</div>
+<div class="estimate-display">
+<div class="estimate-label">Pre-Auction Estimate</div>
+<div class="estimate-value" id="bidEstimate"></div>
+</div>
+<div class="slider-section">
+<div class="slider-title">What was the final auction price?</div>
+<div class="slider-helper">Drag the slider to make your guess</div>
+<div class="slider-range-labels">
+<span class="range-label"><span class="range-label-title">Min</span><span id="rangeMin">£0</span></span>
+<span class="range-label"><span class="range-label-title">Max</span><span id="rangeMax">£0</span></span>
+</div>
+<div class="slider-container">
+<input type="range" class="slider-input" id="bidSlider">
+<div class="actual-marker-wrapper">
+<div class="actual-marker" id="actualMarker"><span class="actual-label" id="actualLabel">SOLD</span></div>
+</div>
+</div>
+</div>
+<div class="feedback" id="feedback"><div class="feedback-title" id="feedTitle"></div><div class="feedback-msg" id="feedMsg"></div><div class="feedback-real-price" id="feedRealPrice"></div><div class="feedback-pct" id="feedPct"></div></div>
+<div class="bid-actions">
+<button class="bid-btn" id="bidBtn" onclick="submitBid()">Submit Guess</button>
+<button class="bid-btn next-btn" id="nextBtn" onclick="nextBid()" style="display:none">Next Artwork</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="level" id="receipt">
+<button class="back-btn" onclick="goTo('collection')">← Back</button>
+<div class="receipt-section">
+<div class="section-header"><h2 class="section-main-title">Your Purchase Receipt</h2></div>
+<div class="receipt-container">
+<div class="receipt-paper">
+<div class="receipt-header">
+<div class="receipt-logo">Order Confirmed</div>
+<div class="receipt-date" id="receiptDate">26 December 2025</div>
+</div>
+<div id="receiptItems"></div>
+<div class="receipt-subtotal"><div class="receipt-item"><span>Subtotal</span><span class="price" id="subAmt">£0</span></div></div>
+<div class="receipt-fee"><div class="receipt-item" style="border:none"><span>Buyer's Premium (25%)</span><span class="price" id="premAmt">£0</span></div></div>
+<div class="receipt-total"><span>Total</span><span id="totalAmt">£0</span></div>
+<button class="freeport-btn" onclick="showFreeport()">Ship to Freeport — Avoid Taxes</button>
+<div class="receipt-footer">Your objects will be stored tax-free in permanent transit.<br>Public visibility: 3–7 days before private storage.</div>
+</div>
+<div class="comparison-section">
+<div class="comparison-header">
+<div class="comparison-title">What This Money Could Buy Instead</div>
+<div class="comparison-subtitle">The real-world impact of your purchase</div>
+</div>
+<div class="comparison-grid" id="comparisonGrid"></div>
+</div>
+<div class="tax-savings-box">
+<div class="tax-savings-label">Potential Tax Savings</div>
+<div class="tax-savings-amount" id="savingsAmount">£0</div>
+<div class="tax-savings-desc">37% of your purchase through legal loopholes</div>
+</div>
+<div class="receipt-actions">
+<button class="receipt-btn primary" onclick="goTo('taxguide')">Learn How to Avoid Taxes</button>
+<button class="receipt-btn outline" onclick="restart()">Start Over</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="freeport-modal" id="freeportModal">
+<div class="freeport-panel">
+<div class="shipping-header"><h2>Shipment Confirmed</h2><p>Tax-Free Storage · Geneva Freeport, Switzerland</p></div>
+<div class="globe-container" id="globeContainer"><div id="globeViz"></div>
+<div class="transit-overlay"><div class="transit-route-label"><span class="transit-city">Art Transit Routes → Geneva Freeport</span></div></div>
+</div>
+<div class="shipping-tracker">
+<div class="tracker-title">Transit Timeline</div>
+<div class="tracker-timeline">
+<div class="tracker-line"></div><div class="tracker-line-fill" id="trackerFill"></div>
+<div class="tracker-step complete active" id="step1"><div class="tracker-dot"></div><div class="tracker-date">Today</div><div class="tracker-text">Order Confirmed</div><div class="tracker-sub">London, UK</div></div>
+<div class="tracker-step" id="step2"><div class="tracker-dot"></div><div class="tracker-date">+2 days</div><div class="tracker-text">In Transit</div><div class="tracker-sub">Secure art transport</div></div>
+<div class="tracker-step" id="step3"><div class="tracker-dot"></div><div class="tracker-date">+5 days</div><div class="tracker-text">Customs Clearance</div><div class="tracker-sub">Tax-free zone entry</div></div>
+<div class="tracker-step" id="step4"><div class="tracker-dot"></div><div class="tracker-date">+7 days</div><div class="tracker-text">Delivered</div><div class="tracker-sub">Geneva Freeport vault</div></div>
+</div>
+</div>
+<div class="freeport-info">
+<div class="freeport-stat">$100B+</div>
+<div class="freeport-stat-label">Estimated Value Stored Globally (40% is art)</div>
+<div class="freeport-text">The Geneva Freeport is the world's largest art storage facility. Your works remain "in transit" indefinitely—no import duties, VAT, or capital gains tax.</div>
+<div class="freeport-list">
+<div class="freeport-item"><span>+</span> No sales tax on purchases</div>
+<div class="freeport-item"><span>+</span> No import/export duties</div>
+<div class="freeport-item"><span>+</span> No capital gains when selling</div>
+<div class="freeport-item"><span>+</span> Climate-controlled storage</div>
+<div class="freeport-item"><span>+</span> Complete privacy from authorities</div>
+</div>
+<button class="freeport-close" onclick="closeFreeport()">Close</button>
+</div>
+</div>
+</div>
+
+<div class="level" id="taxguide">
+<button class="back-btn" onclick="goTo('receipt')">← Back</button>
+<div class="tax-section">
+<div class="section-header">
+<h2 class="section-main-title">The Guide Book to Avoid Taxes</h2>
+<p class="section-description">Five legal strategies the ultra-wealthy use to minimize tax obligations</p>
+</div>
+<div class="tax-container">
+<div class="tax-calculation-display">
+<div class="tax-calc-row"><div class="tax-calc-label"><div class="tax-calc-icon">£</div><span>Your Purchase Total</span></div><div class="tax-calc-value" id="taxReceiptTotal">£0</div></div>
+<div class="tax-calc-row"><div class="tax-calc-label"><div class="tax-calc-icon">×</div><span>Tax Rate</span></div><div class="tax-calc-value">37<span class="tax-calc-percentage">%</span></div></div>
+<div class="tax-calc-row"><div class="tax-calc-label"><div class="tax-calc-icon">=</div><span>Tax Amount</span></div><div class="tax-calc-value" style="color: var(--accent);" id="taxAmountCalc">£0</div></div>
+<div class="tax-calc-row"><div class="tax-calc-label"><div class="tax-calc-icon">✓</div><span>YOUR SAVINGS</span></div><div class="tax-calc-value" id="taxTotalSavings">£0</div></div>
+</div>
+<div class="tax-intro">
+<div class="big-stat">42%</div>
+<p>In 2018 and 2019, only <strong>42% of artwork was appraised correctly</strong> by the IRS. About a third was found to be overvalued by an average of <strong>38%</strong>.</p>
+</div>
+<div class="tax-step"><div class="step-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div class="step-content"><div class="step-title">The Inheritance Shuffle</div><div class="step-stat">Save 38% on estate taxes</div><div class="step-text">Undervalue art when inherited to reduce estate taxes. Later, get a favorable appraisal when donating. The IRS only audits a tiny percentage of pieces.</div></div></div>
+<div class="tax-step"><div class="step-icon"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 21v-8h6v8"/></svg></div><div class="step-content"><div class="step-title">The Private Museum</div><div class="step-stat">Write off 37% of value</div><div class="step-text">Create a private foundation. Donate your art. Claim deduction at inflated market value. Make it "publicly accessible" via 2-hour slots on alternate Wednesdays.</div></div></div>
+<div class="tax-step"><div class="step-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div class="step-content"><div class="step-title">The Freeport Vault</div><div class="step-stat">$100B+ hidden globally</div><div class="step-text">Ship to Geneva, Singapore, or Delaware freeports. Objects remain "in transit" indefinitely—no sales tax, VAT, or import duties.</div></div></div>
+<div class="tax-step"><div class="step-icon"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M12 12h.01"/><path d="M17 12h.01"/><path d="M7 12h.01"/></svg></div><div class="step-content"><div class="step-title">The Art-Backed Loan</div><div class="step-stat">0% capital gains triggered</div><div class="step-text">Use collection as collateral for loans. Loans aren't income—no tax triggered. Access millions in liquidity while art appreciates. Never sell, never pay.</div></div></div>
+<div class="tax-step"><div class="step-icon"><svg viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg></div><div class="step-content"><div class="step-title">The Market Maker</div><div class="step-stat">Inflate your entire collection</div><div class="step-text">Donating work to a museum inflates the value of all other works by that artist. Own 50 pieces? One donation raises the value of 49.</div></div></div>
+<div class="tax-cta"><button class="btn btn-static" onclick="restart()">Shop Some More</button></div>
+</div>
+</div>
+</div>
+
+<script>
+// Sound system
+var sounds = { 
+    addToCart: new Audio('money_jingles.wav'), 
+    checkout: new Audio('money_katching.mp3'), 
+    paymentConfirmed: new Audio('money_confirmed.wav'), 
+    bidding: new Audio('auction.m4a') 
+};
+Object.values(sounds).forEach(function(a) { a.preload = 'auto'; a.volume = 0.7; });
+var auctionSoundPlaying = false;
+
+function playSound(type) {
+    var map = { 'add': sounds.addToCart, 'checkout': sounds.checkout, 'success': sounds.paymentConfirmed, 'bid': sounds.bidding };
+    var audio = map[type];
+    if (audio) { 
+        if (type === 'bid' && !auctionSoundPlaying) { 
+            audio.currentTime = 0; 
+            audio.play().catch(function(){}); 
+            auctionSoundPlaying = true; 
+        } else if (type !== 'bid') { 
+            audio.currentTime = 0; 
+            audio.play().catch(function(){}); 
+        } 
+    }
+}
+function stopSound(type) { 
+    if (type === 'bid') { 
+        sounds.bidding.pause(); 
+        sounds.bidding.currentTime = 0; 
+        auctionSoundPlaying = false; 
+    } 
+}
+
+// Globe
+var globe = null;
+function initGlobe() {
+    if (globe) return;
+    var container = document.getElementById('globeViz');
+    if (!container || typeof Globe === 'undefined') return;
+    var artCapitals = [{ name: 'New York', lat: 40.7128, lng: -74.0060 },{ name: 'London', lat: 51.5074, lng: -0.1278 },{ name: 'Paris', lat: 48.8566, lng: 2.3522 },{ name: 'Los Angeles', lat: 34.0522, lng: -118.2437 },{ name: 'Berlin', lat: 52.5200, lng: 13.4050 }];
+    var geneva = { name: 'Geneva', lat: 46.2044, lng: 6.1432 };
+    var artRoutes = artCapitals.map(function(c) { return { startLat: c.lat, startLng: c.lng, endLat: geneva.lat, endLng: geneva.lng }; });
+    var pointData = artCapitals.concat([geneva]).map(function(c) { return { lat: c.lat, lng: c.lng, size: c.name === 'Geneva' ? 0.25 : 0.15, color: c.name === 'Geneva' ? '#00ff00' : '#ffd700' }; });
+    globe = Globe()(container)
+        .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+        .width(container.offsetWidth)
+        .height(400)
+        .pointsData(pointData)
+        .pointAltitude(0.01)
+        .pointColor('color')
+        .pointRadius('size')
+        .arcsData(artRoutes)
+        .arcStartLat(function(d) { return d.startLat; })
+        .arcStartLng(function(d) { return d.startLng; })
+        .arcEndLat(function(d) { return d.endLat; })
+        .arcEndLng(function(d) { return d.endLng; })
+        .arcColor(function() { return ['rgba(0, 255, 50, 0.8)', 'rgba(50, 255, 100, 1.0)']; })
+        .arcDashLength(0.5)
+        .arcDashGap(0.4)
+        .arcDashAnimateTime(1500)
+        .arcStroke(1.5);
+    globe.pointOfView({ lat: 46.2, lng: 6.1, altitude: 2.2 }, 0);
+    globe.controls().autoRotate = true; 
+    globe.controls().autoRotateSpeed = 0.4; 
+    globe.controls().enableZoom = false;
+}
+
+// Intro effects
+var introSection = document.getElementById('introSection');
+var goldGlow = document.getElementById('goldGlow');
+if (introSection && goldGlow) {
+    introSection.addEventListener('mousemove', function(e) { 
+        var rect = introSection.getBoundingClientRect(); 
+        goldGlow.style.left = (e.clientX - rect.left) + 'px'; 
+        goldGlow.style.top = (e.clientY - rect.top) + 'px'; 
+    });
+}
+
+function animateCounter() { 
+    var counter = document.getElementById('moneyCounter'); 
+    var target = 61900000000; 
+    var duration = 2500; 
+    var start = Date.now(); 
+    function update() { 
+        var elapsed = Date.now() - start; 
+        var progress = Math.min(elapsed / duration, 1); 
+        var eased = 1 - Math.pow(1 - progress, 3); 
+        counter.textContent = Math.floor(target * eased).toLocaleString(); 
+        if (progress < 1) requestAnimationFrame(update); 
+    } 
+    setTimeout(update, 1500); 
+}
+animateCounter();
+
+var arts = [
+    {t:"Salvator Mundi", a:"Leonardo da Vinci", d:"c. 1500", i:"Leonardo_da_Vinci.webp", el:100000000, eh:150000000, p:450300000, m:"Oil on walnut panel", desc:"Christ as Saviour of the World, holding a crystal orb in his left hand. Lost for centuries, it resurfaced in 1900 as a copy, was auctioned for £45 in 1958, then authenticated as a genuine Leonardo in 2011 after extensive restoration revealed his characteristic sfumato technique.", reflection:"The difference between £45 and hundreds of millions is authentication, provenance, and the weight of a name. The painting itself never changed—only what we believed about it.", prov:[{y:"1958",t:"Sold as copy, £45"},{y:"2005",t:"Estate auction"},{y:"2017",t:"Christie's New York"}], fake:false, disputed:true, disputedText:"Matthew Landrus of Oxford University attributes only 5-20% of the work to Leonardo da Vinci, with the remainder attributed to Bernardino Luini.", currency:"$"},
+    {t:"Le Rêve", a:"Pablo Picasso", d:"1932", i:"lereve_picasso.webp", el:120000000, eh:140000000, p:155000000, m:"Oil on canvas", desc:"Marie-Thérèse Walter depicted in an erotic reverie, her body rendered in Picasso's sensuous curved forms. Painted during their secret affair when she was 22 and he was 50. In 2006, casino mogul Steve Wynn put his elbow through the canvas while showing it to guests—a six-inch tear that was meticulously restored.", reflection:"A painting worth over a hundred million was punctured by an elbow during a dinner party. It was repaired and sold for even more. At this level, even damage becomes part of the story.", prov:[{y:"1932",t:"Artist's collection"},{y:"1997",t:"Ganz Collection"},{y:"2006",t:"Damaged by elbow"},{y:"2013",t:"Private sale"}], fake:false, currency:"$"},
+    {t:"Shot Sage Blue Marilyn", a:"Andy Warhol", d:"1964", i:"Andy-Warhol-Marilyn_.webp", el:150000000, eh:200000000, p:195000000, m:"Silkscreen on canvas", desc:"One of five Marilyn portraits Warhol made in 1964, each with a different coloured background. Called 'Shot' because performance artist Dorothy Podber asked to shoot them, then pulled out a pistol and fired. This sage blue version survived; others were repaired.", reflection:"When you own hundreds of works by one artist, you control the market. Bid aggressively at auction, inflate the price index, and watch your entire collection appreciate overnight.", prov:[{y:"1964",t:"Leo Castelli Gallery"},{y:"2022",t:"Christie's New York"}], fake:false, currency:"$"},
+    {t:"Femme à la montre", a:"Pablo Picasso", d:"1932", i:"Picasso-Femme-a-la-montre.webp", el:100000000, eh:140000000, p:139300000, m:"Oil on canvas", desc:"Marie-Thérèse wears a watch—unusual in Picasso's portraits. Some scholars suggest it symbolises the stolen hours of their clandestine meetings, conducted in secret while Picasso remained married to Olga Khokhlova. Painted at Boisgeloup, his country retreat where Marie-Thérèse was hidden from the world.", prov:[{y:"1932",t:"Artist's collection"},{y:"2023",t:"Sotheby's New York"}], fake:false, currency:"$"},
+    {t:"La Montagne Sainte-Victoire", a:"Paul Cézanne", d:"1888-90", i:"Cezanne.webp", el:120000000, eh:150000000, p:137790000, m:"Oil on canvas", desc:"Cézanne painted this Provençal mountain over 80 times, each iteration more abstracted than the last. He saw in its limestone face a permanent truth—geology as geometry. Picasso called him 'the father of us all.' This obsessive repetition laid the groundwork for Cubism.", prov:[{y:"1890",t:"Ambroise Vollard"},{y:"2022",t:"Christie's New York"}], fake:false, currency:"$"},
+    {t:"L'empire des lumières", a:"René Magritte", d:"1961", i:"magritte.webp", el:95000000, eh:130000000, p:121200000, m:"Oil on canvas", desc:"Day and night occupy the same canvas—a sunlit sky above a nocturnal street scene. Magritte painted 27 versions of this impossible image over 16 years, calling it 'the evocation of night and day.' The contradiction feels so natural that viewers often don't notice it at first.", prov:[{y:"1961",t:"Artist's studio"},{y:"2024",t:"Christie's London"}], fake:false, currency:"$"},
+    {t:"Birch Forest", a:"Gustav Klimt", d:"1903", i:"klimtforest.webp", el:80000000, eh:100000000, p:104500000, m:"Oil on canvas", desc:"A square canvas filled edge to edge with silver birch trunks, their leaves forming a canopy that dissolves into pointillist dots. Klimt painted forests as meditative escapes from his ornate portraits. Seized by the Nazis in 1938, it hung in official residences until restituted to the heirs in 2006.", prov:[{y:"1903",t:"Vienna Secession"},{y:"1938",t:"Looted by Nazis"},{y:"2006",t:"Restituted"},{y:"2022",t:"Christie's New York"}], fake:false, currency:"$"},
+    {t:"Le Nez", a:"Alberto Giacometti", d:"1947", i:"AlbertoGiacometti _Le Nez.jpg", el:70000000, eh:90000000, p:78400000, m:"Bronze, wire, rope", desc:"A screaming head suspended in a metal cage, its nose extending grotesquely beyond the frame. Created in post-war Paris, it captures the existential horror Giacometti felt—the impossibility of truly seeing another person. The nose both reaches toward and is trapped by its enclosure.", prov:[{y:"1947",t:"Pierre Matisse Gallery"},{y:"2021",t:"Sotheby's New York"}], fake:false, currency:"$"},
+    {t:"Yamanaka Vase", a:"Jingdezhen Imperial", d:"Qianlong era", i:"chinesevase.png", el:50000000, eh:70000000, p:149091000, m:"Reticulated porcelain", desc:"Double-walled vase with sixteen revolving pierced discs in Rococo style—a technical impossibility that took Jingdezhen's master craftsmen months to complete. Made for Emperor Qianlong, who loved European decorative motifs. Its twin, the Bainbridge Vase, sold at auction but the buyer defaulted.", reflection:"The twin vase sold but the buyer never paid. It eventually resold for half the hammer price. Even at the top, deals fall through and fortunes vanish.", prov:[{y:"1736-1795",t:"Made for Emperor Qianlong"},{y:"2018",t:"Sotheby's Hong Kong"}], fake:false, currency:"HK$"},
+    {t:"Elvire en buste", a:"Amedeo Modigliani", d:"1919", i:"modiglianibustelvira.jpg", el:8000000, eh:12000000, p:31300000, m:"Oil on canvas", desc:"Portrait of Elvira, known as 'La Quique,' painted months before Modigliani's death at 35 from tubercular meningitis. His elongated necks and almond eyes—influenced by African masks and Brancusi—were mocked in his lifetime. He sold few paintings and died in poverty.", prov:[{y:"1919",t:"Paris"},{y:"2025",t:"Sotheby's New York"}], fake:false, currency:"$"},
+    {t:"America (Golden Toilet)", a:"Maurizio Cattelan", d:"2016", i:"GoldenToilet.webp", el:8000000, eh:12000000, p:12100000, m:"18-karat gold, 101kg", desc:"A fully functional toilet cast in solid 18-karat gold, weighing over 100 kilograms. First installed at the Guggenheim where visitors could use it. Later loaned to Blenheim Palace, where it was stolen in 2019—thieves flooded the building by ripping it from the plumbing.", prov:[{y:"2016",t:"Guggenheim"},{y:"2019",t:"Stolen from Blenheim"},{y:"2025",t:"Sotheby's London"}], fake:false, currency:"$"},
+    {t:"The Original Birkin", a:"Hermès", d:"1985", i:"hermesbirkin.png", el:5000000, eh:8000000, p:8580000, m:"Black Box leather", desc:"The first Birkin bag ever made. In 1981, Jane Birkin sat next to Hermès CEO Jean-Louis Dumas on a flight and complained her bag couldn't hold her things. He sketched a design on the sick bag. Four years later, this prototype arrived—black box leather, gold hardware, her initials embossed inside.", prov:[{y:"1985",t:"Made for Jane Birkin"},{y:"2025",t:"Sotheby's Paris"}], fake:false, currency:"€"},
+    {t:"Red Picture with Horses", a:"Heinrich Campendonk", d:"1914", i:"redpicturewithhorses.jpeg", el:2000000, eh:3000000, p:2800000, m:"Oil on canvas", desc:"Sold as a lost German Expressionist masterpiece with impeccable provenance. For years it hung in prestigious collections. Then forensic analysis found titanium white in the paint—a pigment not invented until 1921. The painting dated 1914 couldn't possibly be authentic.", prov:[{y:"1914",t:"Claimed: Artist's studio"},{y:"2006",t:"Sold at auction"},{y:"2011",t:"Exposed as forgery"}], fake:true, forgeryText:"Wolfgang Beltracchi fake exposed in 2011. Beltracchi forged hundreds of works over 40 years, inventing entire provenances and ageing canvases with tea. This single anachronistic pigment brought down his empire.", currency:"€"},
+    {t:"Theory of Happiness", a:"Albert Einstein", d:"1922", i:"EinsteinTheoryhappiness.png", el:10000, eh:20000, p:1560000, m:"Handwritten note", desc:"In 1922, Einstein was in Tokyo when a courier delivered news of his Nobel Prize. Unable to tip the bellboy in local currency, he wrote two notes instead, saying they might be worth more than money someday. This one reads: 'A calm and modest life brings more happiness than the pursuit of success.'", prov:[{y:"1922",t:"Given as tip, Tokyo"},{y:"2017",t:"Winner's Jerusalem"}], fake:false, currency:"$"},
+    {t:"Again and Again (SpongeBob)", a:"KAWS", d:"2008", i:"spongebob.png", el:250000, eh:400000, p:1030000, m:"Acrylic on canvas", desc:"SpongeBob rendered with KAWS' signature X-ed out eyes—a motif the artist applies to cartoon characters to suggest both death and transcendence. KAWS began as a graffiti artist, tagging bus shelter ads with his skull-and-crossbones figures. Now his work sells alongside Picasso.", prov:[{y:"2008",t:"Created by KAWS"},{y:"2019",t:"Sotheby's London"}], fake:false, currency:"£"},
+    {t:"Batpod", a:"Warner Bros.", d:"2008", i:"batmobik.png", el:300000, eh:500000, p:400000, m:"Production vehicle", desc:"The screen-used Batpod from The Dark Knight—a 310kg motorcycle with 508mm front tires that actually drives. Stunt riders lay prone with arms extended, steering through the handlebars. Six were built for production; this one appeared in the tunnel chase sequence.", prov:[{y:"2008",t:"The Dark Knight production"},{y:"2025",t:"Christie's London"}], fake:false, currency:"£"},
+    {t:"Moustache Comb", a:"Freddie Mercury's Personal Item", d:"c. 1980", i:"Freddy_MoustachComb 2.png", el:400, eh:600, p:152400, m:"Sterling silver, Tiffany & Co.", desc:"Freddie Mercury's personal sterling silver moustache comb from Tiffany & Co. Mercury grew his iconic moustache in 1980, transforming from a long-haired rock frontman into the leather-clad figure of the 'Another One Bites the Dust' era. He used this comb daily until his death in 1991.", prov:[{y:"1980s",t:"Freddie Mercury"},{y:"2023",t:"Sotheby's London"}], fake:false, currency:"£"},
+    {t:"Ashes of Truman Capote", a:"Truman Capote", d:"1984", i:"TrumanAshes.png", el:2000, eh:4000, p:45000, m:"Human remains", desc:"The cremated remains of Truman Capote, author of 'In Cold Blood' and 'Breakfast at Tiffany's.' After his death, the ashes were divided between friends. Joanne Carson kept her portion in a Japanese urn. When she died, they went to auction—the literary celebrity reduced to a lot number.", reflection:"Human ashes sold at auction. The art market will commodify anything—including death itself, including the body of a man who wrote about murder and celebrity.", prov:[{y:"1984",t:"Capote dies"},{y:"2016",t:"Julien's Auctions"}], fake:false, currency:"$"}
+];
+
+var budget = 0, selected = [], queue = [], idx = 0, buys = [], currentBid = 0, sliderMin = 0, sliderMax = 0, currentModalIdx = -1, totalSpent = 0, lastPaymentFailed = false;
+
+function fmtCurrency(n, curr) {
+    var c = curr || '£';
+    if (n >= 1e9) return c + (n/1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+    if (n >= 1e6) return c + (n/1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1e3) return c + Math.round(n/1e3) + 'K';
+    return c + n;
+}
+function fmt(n) { return fmtCurrency(n, '£'); }
+function fmtFull(n) { return '£' + n.toLocaleString(); }
+function fmtEst(l, h, curr) { return fmtCurrency(l, curr) + ' – ' + fmtCurrency(h, curr); }
+
+function goTo(id) {
+    document.querySelectorAll('.level').forEach(function(l) { l.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
+    setTimeout(function() { document.getElementById(id).scrollTop = 0; }, 50);
+    if (id === 'taxguide') { 
+        var tot = buys.reduce(function(s, w) { return s + w.p; }, 0);
+        var prem = tot * 0.25, fin = tot + prem, tax = fin * 0.37; 
+        document.getElementById('taxTotalSavings').textContent = fmt(tax); 
+        document.getElementById('taxReceiptTotal').textContent = fmt(fin); 
+        document.getElementById('taxAmountCalc').textContent = fmt(tax); 
+    }
+    if (id !== 'collection') document.getElementById('bottomBar').classList.remove('show');
+}
+
+function selectBudget(amt) { 
+    budget = amt; 
+    document.getElementById('budgetRemaining').textContent = fmtFull(budget); 
+    playSound('add'); // Money sound for selecting budget
+    loadGrid(); 
+    goTo('collection'); 
+}
+
+function loadGrid() {
+    document.getElementById('grid').innerHTML = arts.map(function(a, i) {
+        return '<div class="card" id="card-' + i + '">' +
+            '<div class="card-img-wrap" onclick="openModal(' + i + ')">' +
+                '<img src="' + a.i + '" class="card-img" alt="' + a.t + '" onerror="this.style.background=\'#eee\'">' +
+                '<div class="card-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg></div>' +
+            '</div>' +
+            '<div class="card-info">' +
+                '<div class="card-artist">' + a.a + '</div>' +
+                '<div class="card-date">' + a.d + '</div>' +
+                '<div class="card-title">' + a.t + '</div>' +
+                '<div class="card-medium">' + a.m + '</div>' +
+                '<div class="card-estimate-label">Auction Estimate</div>' +
+                '<div class="card-estimate">' + fmtEst(a.el, a.eh, a.currency) + '</div>' +
+                '<div class="card-spacer"></div>' +
+                '<button class="card-add-btn" onclick="event.stopPropagation(); toggleSelect(' + i + ')">' + (selected.indexOf(i) > -1 ? '✓ In Cart' : 'Add to Cart') + '</button>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
+function toggleSelect(i) {
+    var card = document.getElementById('card-' + i), a = arts[i], pos = selected.indexOf(i);
+    if (pos > -1) { 
+        selected.splice(pos, 1); 
+        card.classList.remove('selected'); 
+        budget += a.p; 
+    } else { 
+        selected.push(i); 
+        card.classList.add('selected'); 
+        budget -= a.p; 
+        playSound('add'); // Money sound only when ADDING to cart
+    }
+    document.getElementById('budgetRemaining').textContent = fmtFull(budget);
+    document.getElementById('budgetRemaining').classList.toggle('negative', budget < 0);
+    document.getElementById('selectedCount').textContent = selected.length;
+    document.getElementById('bottomBar').classList.toggle('show', selected.length > 0);
+    card.querySelector('.card-add-btn').textContent = selected.indexOf(i) > -1 ? '✓ In Cart' : 'Add to Cart';
+}
+
+function openModal(i) {
+    currentModalIdx = i; 
+    var a = arts[i];
+    document.getElementById('modalImg').src = a.i; 
+    document.getElementById('modalTitle').textContent = a.t; 
+    document.getElementById('modalArtist').textContent = a.a; 
+    document.getElementById('modalDate').textContent = a.d; 
+    document.getElementById('modalPrice').textContent = fmtEst(a.el, a.eh, a.currency); 
+    document.getElementById('modalMedium').textContent = a.m; 
+    document.getElementById('modalDesc').textContent = a.desc;
+    var refl = document.getElementById('modalReflection'); 
+    refl.style.display = a.reflection ? 'block' : 'none'; 
+    if (a.reflection) refl.textContent = a.reflection;
+    document.getElementById('forgeryWarning').style.display = a.fake ? 'block' : 'none'; 
+    if (a.fake) document.getElementById('forgeryText').textContent = a.forgeryText || '';
+    document.getElementById('disputedWarning').style.display = a.disputed ? 'block' : 'none'; 
+    if (a.disputed) document.getElementById('disputedText').textContent = a.disputedText;
+    document.getElementById('modalTimeline').innerHTML = a.prov.map(function(p) { 
+        return '<div class="timeline-item"><div class="timeline-year">' + p.y + '</div><div class="timeline-text">' + p.t + '</div></div>'; 
+    }).join('');
+    var btn = document.getElementById('modalSelectBtn'); 
+    btn.textContent = selected.indexOf(i) > -1 ? 'Remove from Cart' : 'Add to Cart'; 
+    btn.classList.toggle('added', selected.indexOf(i) > -1);
+    document.getElementById('detailModal').classList.add('show');
+}
+
+function closeModal() { 
+    document.getElementById('detailModal').classList.remove('show'); 
+    currentModalIdx = -1; 
+}
+
+function toggleFromModal() { 
+    if (currentModalIdx >= 0) { 
+        toggleSelect(currentModalIdx); 
+        var btn = document.getElementById('modalSelectBtn'); 
+        btn.textContent = selected.indexOf(currentModalIdx) > -1 ? 'Remove from Cart' : 'Add to Cart'; 
+        btn.classList.toggle('added', selected.indexOf(currentModalIdx) > -1); 
+    } 
+}
+
+function startBidding() { 
+    if (!selected.length) return; 
+    playSound('checkout'); // Money sound for checkout
+    queue = selected.slice(); 
+    idx = 0; 
+    buys = []; 
+    document.getElementById('lotTotal').textContent = queue.length; 
+    playSound('bid'); 
+    showBid(); 
+    goTo('bidding'); 
+}
+
+function showBid() {
+    if (idx >= queue.length) { stopSound('bid'); showPayment(); return; }
+    var a = arts[queue[idx]];
+    document.getElementById('bidImg').src = a.i; 
+    document.getElementById('bidTitle').textContent = a.t; 
+    document.getElementById('bidArtist').textContent = a.a + ', ' + a.d; 
+    document.getElementById('bidEstimate').textContent = fmtEst(a.el, a.eh, a.currency); 
+    document.getElementById('lotNum').textContent = idx + 1;
+    sliderMin = Math.round(a.el * 0.5); 
+    sliderMax = Math.round(Math.max(a.eh * 2, a.p * 1.5)); 
+    currentBid = Math.round((a.el + a.eh) / 2);
+    var slider = document.getElementById('bidSlider'); 
+    slider.min = sliderMin; 
+    slider.max = sliderMax; 
+    slider.value = currentBid;
+    document.getElementById('rangeMin').textContent = fmtCurrency(sliderMin, a.currency); 
+    document.getElementById('rangeMax').textContent = fmtCurrency(sliderMax, a.currency);
+    document.getElementById('actualMarker').classList.remove('show');
+    document.getElementById('feedback').classList.remove('show', 'correct', 'wrong');
+    document.getElementById('bidBtn').style.display = 'block'; 
+    document.getElementById('nextBtn').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() { 
+    var slider = document.getElementById('bidSlider'); 
+    if (slider) { 
+        slider.addEventListener('input', function() { currentBid = parseInt(slider.value); }); 
+        slider.addEventListener('change', function() { currentBid = parseInt(slider.value); }); 
+    } 
+});
+
+function submitBid() {
+    var a = arts[queue[idx]]; 
+    buys.push({ t: a.t, p: a.p });
+    var actualPct = ((a.p - sliderMin) / (sliderMax - sliderMin)) * 100;
+    var marker = document.getElementById('actualMarker'); 
+    marker.style.left = actualPct + '%'; 
+    document.getElementById('actualLabel').textContent = 'SOLD: ' + fmtCurrency(a.p, a.currency); 
+    marker.classList.add('show');
+    var fb = document.getElementById('feedback'), diff = Math.abs(currentBid - a.p), pct = Math.round(diff / a.p * 100);
+    document.getElementById('feedRealPrice').textContent = fmtCurrency(a.p, a.currency);
+    if (pct <= 15) { 
+        fb.className = 'feedback show correct'; 
+        document.getElementById('feedTitle').textContent = 'Excellent guess!'; 
+        document.getElementById('feedMsg').textContent = 'Final auction price:'; 
+        document.getElementById('feedPct').textContent = 'Only ' + pct + '% off'; 
+        playSound('success'); // Money sound for correct guess
+    } else if (currentBid < a.p) { 
+        fb.className = 'feedback show wrong'; 
+        document.getElementById('feedTitle').textContent = 'Too Low'; 
+        document.getElementById('feedMsg').textContent = 'Final auction price:'; 
+        document.getElementById('feedPct').textContent = pct + '% under'; 
+    } else { 
+        fb.className = 'feedback show wrong'; 
+        document.getElementById('feedTitle').textContent = 'Too High'; 
+        document.getElementById('feedMsg').textContent = 'Final auction price:'; 
+        document.getElementById('feedPct').textContent = pct + '% over'; 
+    }
+    document.getElementById('bidBtn').style.display = 'none'; 
+    document.getElementById('nextBtn').style.display = 'block';
+    document.getElementById('nextBtn').textContent = idx + 1 >= queue.length ? 'Complete Purchase' : 'Next Artwork';
+}
+
+function nextBid() { idx++; showBid(); }
+
+function showPayment() {
+    var total = buys.reduce(function(s, w) { return s + w.p; }, 0);
+    var prem = total * 0.25, fin = total + prem;
+    var overlay = document.getElementById('paymentOverlay'); 
+    overlay.classList.add('show');
+    document.getElementById('paymentAmount').textContent = fmt(fin); 
+    document.getElementById('paymentDetails').textContent = buys.length + ' item' + (buys.length > 1 ? 's' : '');
+    var steps = ['Verifying payment method...','Authenticating transaction...','Processing payment...','Confirming with auction house...','Transaction complete'];
+    var stepIdx = 0; 
+    var stepsEl = document.getElementById('paymentSteps'), icon = document.getElementById('paymentIcon'), title = document.getElementById('paymentTitle'), text = document.getElementById('paymentText');
+    icon.className = 'payment-icon processing';
+    var willFail = !lastPaymentFailed && Math.random() < 0.25;
+    var interval = setInterval(function() {
+        stepIdx++;
+        if (willFail && stepIdx === 3) { 
+            clearInterval(interval); 
+            lastPaymentFailed = true; 
+            document.getElementById('paymentCheck').textContent = '✕'; 
+            icon.className = 'payment-icon failure'; 
+            title.textContent = 'Payment Failed'; 
+            text.textContent = 'Your card was declined. Please try again.'; 
+            stepsEl.innerHTML = '<span style="color: var(--accent);">Error: Insufficient funds or card limit exceeded</span>'; 
+            setTimeout(function() { 
+                var retryBtn = document.createElement('button'); 
+                retryBtn.className = 'btn btn-static'; 
+                retryBtn.textContent = 'RETRY PAYMENT'; 
+                retryBtn.style.marginTop = '24px'; 
+                retryBtn.onclick = function() { 
+                    overlay.classList.remove('show'); 
+                    document.getElementById('paymentCheck').textContent = '✓'; 
+                    icon.className = 'payment-icon'; 
+                    title.textContent = 'Processing Payment'; 
+                    text.textContent = 'Please wait while we process your transaction'; 
+                    stepsEl.textContent = steps[0]; 
+                    retryBtn.remove(); 
+                    setTimeout(function() { showPayment(); }, 300); 
+                }; 
+                document.querySelector('.payment-card').appendChild(retryBtn); 
+            }, 1000); 
+            return; 
+        }
+        stepsEl.textContent = steps[stepIdx];
+        if (stepIdx >= steps.length - 1) { 
+            clearInterval(interval); 
+            lastPaymentFailed = false; 
+            icon.className = 'payment-icon success'; 
+            title.textContent = 'Payment Confirmed'; 
+            text.textContent = 'Your acquisition has been processed'; 
+            playSound('success'); // Money sound for payment success
+            setTimeout(function() { 
+                overlay.classList.remove('show'); 
+                icon.className = 'payment-icon'; 
+                title.textContent = 'Processing Payment'; 
+                text.textContent = 'Please wait while we process your transaction'; 
+                stepsEl.textContent = steps[0]; 
+                showReceipt(); 
+            }, 1500); 
+        }
+    }, 700);
+}
+
+function showReceipt() {
+    goTo('receipt');
+    var tot = buys.reduce(function(s, w) { return s + w.p; }, 0);
+    var prem = tot * 0.25, fin = tot + prem, tax = fin * 0.37; 
+    totalSpent = fin;
+    document.getElementById('savingsAmount').textContent = fmt(tax);
+    document.getElementById('receiptItems').innerHTML = buys.map(function(w) { 
+        return '<div class="receipt-item"><span class="name">' + w.t + '</span><span class="price">' + fmt(w.p) + '</span></div>'; 
+    }).join('');
+    document.getElementById('subAmt').textContent = fmt(tot); 
+    document.getElementById('premAmt').textContent = fmt(prem); 
+    document.getElementById('totalAmt').textContent = fmt(fin);
+    var comparisons = [
+        { icon: '<svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>', label: 'NHS Nurse Salaries', calc: Math.floor(fin / 35000), unit: 'years of salary' },
+        { icon: '<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>', label: 'UK Homes', calc: Math.floor(fin / 290000), unit: 'average homes' },
+        { icon: '<svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>', label: 'University Tuitions', calc: Math.floor(fin / 9250), unit: 'years of fees' },
+        { icon: '<svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>', label: 'School Meals', calc: Math.floor(fin / 2.5), unit: 'meals for children' }
+    ];
+    document.getElementById('comparisonGrid').innerHTML = comparisons.map(function(c) { 
+        return '<div class="comparison-card"><div class="comparison-icon">' + c.icon + '</div><div class="comparison-num">' + c.calc.toLocaleString() + '</div><div class="comparison-label">' + c.label + '</div><div class="comparison-text">' + c.unit + '</div></div>'; 
+    }).join('');
+}
+
+function showFreeport() { 
+    document.getElementById('freeportModal').classList.add('show'); 
+    setTimeout(function() { initGlobe(); }, 100); 
+    setTimeout(function() { 
+        document.getElementById('trackerFill').style.height = '33%'; 
+        document.getElementById('step2').classList.add('active', 'complete'); 
+    }, 1000); 
+    setTimeout(function() { 
+        document.getElementById('trackerFill').style.height = '66%'; 
+        document.getElementById('step3').classList.add('active'); 
+    }, 2000); 
+}
+
+function closeFreeport() { 
+    document.getElementById('freeportModal').classList.remove('show'); 
+    document.getElementById('trackerFill').style.height = '0%'; 
+    document.querySelectorAll('.tracker-step').forEach(function(s, i) { 
+        if (i === 0) s.classList.add('complete', 'active'); 
+        else s.classList.remove('complete', 'active'); 
+    }); 
+}
+
+function restart() { 
+    selected = []; 
+    buys = []; 
+    budget = 0; 
+    totalSpent = 0; 
+    lastPaymentFailed = false; 
+    stopSound('bid'); 
+    document.querySelectorAll('.card').forEach(function(c) { c.classList.remove('selected'); }); 
+    goTo('intro'); 
+}
+
+document.getElementById('detailModal').addEventListener('click', function(e) { if (e.target.id === 'detailModal') closeModal(); });
+document.getElementById('freeportModal').addEventListener('click', function(e) { if (e.target.id === 'freeportModal') closeFreeport(); });
+</script>
+</body>
+</html>
