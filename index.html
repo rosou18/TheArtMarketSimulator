@@ -23,16 +23,61 @@ html, body { height: 100%; overflow: hidden; }
 body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--text); line-height: 1.5; -webkit-font-smoothing: antialiased; }
 .level { position: fixed; inset: 0; background: var(--bg); opacity: 0; visibility: hidden; transition: opacity 0.5s; overflow-y: auto; }
 .level.active { opacity: 1; visibility: visible; z-index: 10; }
-.back-btn { position: fixed; top: 24px; left: 24px; background: transparent; border: none; font-family: 'DM Mono', monospace; font-size: 1.2rem; letter-spacing: 0.15em; color: var(--muted); cursor: pointer; z-index: 100; transition: color 0.2s; text-transform: uppercase; }
-.back-btn:hover { color: var(--text); }
+.back-btn { position: fixed; top: 24px; left: 24px; background: transparent; border: none; font-family: 'DM Mono', monospace; font-size: 1.1rem; letter-spacing: 0.2em; color: rgba(136, 136, 136, 0.5); cursor: pointer; z-index: 100; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); text-transform: uppercase; }
+.back-btn:hover { color: var(--text); transform: translateX(-4px); }
 
 .section-header { text-align: center; padding: 60px 24px 40px; }
 .section-main-title { font-family: 'Playfair Display', serif; font-size: clamp(2.8rem, 5vw, 4.5rem); font-weight: 900; letter-spacing: -0.02em; margin-bottom: 20px; line-height: 1.1; }
-.section-description { font-family: 'DM Mono', monospace; font-size: 1.4rem; font-weight: 300; color: #666; max-width: 700px; margin: 0 auto; line-height: 1.8; }
+.section-description { font-family: 'DM Mono', monospace; font-size: 1.3rem; font-weight: 300; color: rgba(102, 102, 102, 0.7); max-width: 700px; margin: 0 auto; line-height: 1.8; letter-spacing: 0.02em; }
+
+.step-indicator { font-family: 'DM Mono', monospace; font-size: 1.1rem; letter-spacing: 0.4em; text-transform: uppercase; color: rgba(136, 136, 136, 0.6); text-align: center; margin-bottom: 16px; font-weight: 500; background: #fafafa; padding: 12px 24px; display: inline-block; border: 1px solid var(--light); }
+
+.scroll-indicator { position: fixed; bottom: 40px; right: 40px; display: flex; flex-direction: column; align-items: center; gap: 10px; animation: gentleBounce 2s ease-in-out infinite; opacity: 0.6; transition: opacity 0.3s; z-index: 50; }
+.scroll-indicator:hover { opacity: 1; }
+.scroll-text { font-family: 'DM Mono', monospace; font-size: 0.9rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text); font-weight: 500; }
+.scroll-arrow { width: 28px; height: 28px; border-right: 3px solid var(--text); border-bottom: 3px solid var(--text); transform: rotate(45deg); }
+@keyframes gentleBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+.action-hint { font-family: 'DM Mono', monospace; font-size: 1.1rem; letter-spacing: 0.25em; text-transform: uppercase; color: rgba(136, 136, 136, 0.6); text-align: center; margin-top: 24px; animation: subtlePulse 2s ease-in-out infinite; }
+@keyframes subtlePulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+/* Click indicator styling */
+.click-indicator { font-family: 'DM Mono', monospace; font-size: 1.1rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); margin-top: 20px; animation: subtlePulse 2s ease-in-out infinite; }
+@keyframes clickPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.8; } }
+
+/* Next action arrow indicator */
+.next-arrow { display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'DM Mono', monospace; font-size: 1rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-top: 16px; }
+.next-arrow .arrow { display: inline-block; animation: arrowBounce 1.5s ease-in-out infinite; }
+.next-arrow .arrow:nth-child(2) { animation-delay: 0.15s; }
+.next-arrow .arrow:nth-child(3) { animation-delay: 0.3s; }
+@keyframes arrowBounce { 0%, 100% { opacity: 0.3; transform: translateX(0); } 50% { opacity: 1; transform: translateX(4px); } }
+
+.next-arrow-down { flex-direction: column; gap: 4px; }
+.next-arrow-down .arrow { animation: arrowBounceDown 1.5s ease-in-out infinite; }
+@keyframes arrowBounceDown { 0%, 100% { opacity: 0.3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(4px); } }
+
+.next-arrow-up .arrow { animation: arrowBounceUp 1.5s ease-in-out infinite; }
+@keyframes arrowBounceUp { 0%, 100% { opacity: 0.3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-4px); } }
+
+
+.scroll-hint { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); font-family: 'DM Mono', monospace; font-size: 0.9rem; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(136, 136, 136, 0.3); animation: fadeInOut 3s ease-in-out infinite; z-index: 50; pointer-events: none; }
+.scroll-hint::after { content: '↓'; display: block; font-size: 1.4rem; text-align: center; margin-top: 6px; opacity: 0.4; }
+@keyframes fadeInOut { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.6; } }
 
 /* INTRO */
 .intro { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4rem; text-align: center; background: #fafafa; position: relative; overflow: hidden; }
-.gold-glow { position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(184,134,11,0.12) 0%, rgba(184,134,11,0.05) 40%, transparent 70%); border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); transition: left 0.4s ease-out, top 0.4s ease-out; filter: blur(60px); }
+.gold-glow { position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(184,134,11,0.15) 0%, rgba(184,134,11,0.05) 40%, transparent 70%); border-radius: 50%; pointer-events: none; filter: blur(60px); animation: glowDrift 8s ease-in-out infinite; }
+.gold-glow::after { content: ''; position: absolute; inset: -50px; background: radial-gradient(circle, rgba(184,134,11,0.1) 0%, transparent 60%); border-radius: 50%; animation: glowPulse 3s ease-in-out infinite; }
+@keyframes glowDrift { 
+    0%, 100% { transform: translate(-50%, -50%) translate(0, 0); } 
+    25% { transform: translate(-50%, -50%) translate(40px, -30px); } 
+    50% { transform: translate(-50%, -50%) translate(-30px, 40px); } 
+    75% { transform: translate(-50%, -50%) translate(35px, 35px); } 
+}
+@keyframes glowPulse {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.2); opacity: 1; }
+}
 .intro::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(184,134,11,0.015) 0%, transparent 50%); animation: shimmer 20s linear infinite; }
 @keyframes shimmer { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .intro-label { font-family: 'DM Mono', monospace; font-size: 2.4rem; letter-spacing: 0.8em; text-transform: uppercase; color: var(--text); font-weight: 500; margin-top: 1.5rem; margin-bottom: 3rem; opacity: 0; animation: fadeIn 1s ease 0.5s forwards; }
@@ -47,12 +92,18 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 .money-display { font-family: 'DM Mono', monospace; font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 500; margin-bottom: 0.8rem; background: linear-gradient(90deg, #8B7355, #b8860b, #d4a012, #b8860b, #8B7355); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; opacity: 0; animation: fadeIn 1s ease 1.2s forwards, goldShimmer 4s linear infinite; }
 @keyframes goldShimmer { 0% { background-position: 0% center; } 100% { background-position: 200% center; } }
 .intro-stat-label { font-family: 'DM Mono', monospace; font-size: 1.2rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--muted); margin-bottom: 4rem; opacity: 0; animation: fadeIn 1s ease 1.4s forwards; }
-.btn { padding: 22px 70px; background: var(--text); color: #fff; border: none; font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; cursor: pointer; transition: all 0.3s; opacity: 0; animation: fadeIn 1s ease 1.6s forwards; }
-.btn:hover { background: #333; transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0,0,0,0.15); }
+.btn { padding: 22px 70px; background: var(--text); color: #fff; border: none; font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; animation: fadeIn 1s ease 1.6s forwards, gentleButtonPulse 3s ease-in-out 2.5s infinite; position: relative; overflow: hidden; }
+.btn::before { content: ''; position: absolute; inset: -2px; background: radial-gradient(circle at 50% 50%, rgba(184,134,11,0.4), rgba(184,134,11,0.2) 40%, transparent 70%); opacity: 0; transition: opacity 0.6s; filter: blur(10px); z-index: -1; }
+@keyframes gentleButtonPulse { 0%, 100% { box-shadow: 0 0 20px rgba(184,134,11,0.3); } 50% { box-shadow: 0 0 40px rgba(184,134,11,0.5), 0 0 60px rgba(184,134,11,0.2); } }
+.btn::after { content: '→'; position: absolute; right: 24px; opacity: 0; transform: translateX(-10px); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); font-size: 1.4rem; }
+.btn:hover::before { opacity: 1; }
+.btn:hover { background: #000; transform: translateY(-2px); box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 50px rgba(184,134,11,0.4); padding-right: 90px; }
+.btn:hover::after { opacity: 1; transform: translateX(0); }
+.btn:active { transform: translateY(0); }
 .btn-static { opacity: 1; animation: none; }
 
 /* BUDGET */
-.budget-section { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 0 3rem 5rem; }
+.budget-section { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 0 3rem 5rem; position: relative; }
 .charts-row { display: flex; gap: 50px; flex-wrap: wrap; justify-content: center; margin-bottom: 3rem; }
 .chart-card { background: transparent; padding: 28px; text-align: center; min-width: 300px; opacity: 0; animation: fadeInUp 0.6s ease forwards; }
 .chart-card:nth-child(1) { animation-delay: 0.2s; }
@@ -75,11 +126,16 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 .market-context { max-width: 850px; margin: 0 auto 4rem; text-align: center; background: #fafafa; padding: 36px 48px; border: 1px solid var(--light); }
 .market-context p { font-family: 'DM Mono', monospace; font-size: 1.4rem; font-weight: 300; color: #555; line-height: 2; }
 .wealth-tier-title { font-family: 'Playfair Display', serif; font-size: clamp(2.8rem, 5vw, 4rem); font-weight: 900; letter-spacing: -0.02em; text-align: center; margin: 4rem 0 1.5rem; }
-.budget-instruction { font-family: 'DM Mono', monospace; font-size: 1.2rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); text-align: center; margin-bottom: 3rem; }
+.budget-instruction { font-family: 'DM Mono', monospace; font-size: 1.1rem; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(136, 136, 136, 0.4); text-align: center; margin-bottom: 4rem; font-weight: 300; }
 
 .budget-grid { display: flex; gap: 4px; margin-bottom: 5rem; }
-.budget-card { background: var(--bg); border: 1px solid var(--light); padding: 4rem 4.5rem; text-align: center; cursor: pointer; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); min-width: 320px; }
-.budget-card:hover { background: var(--text); color: #fff; border-color: var(--text); transform: translateY(-10px) scale(1.02); box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+.budget-card { background: var(--bg); border: 1px solid var(--light); padding: 4rem 4.5rem; text-align: center; cursor: pointer; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); min-width: 320px; position: relative; animation: subtleFloat 6s ease-in-out infinite; }
+.budget-card:nth-child(2) { animation-delay: -2s; }
+.budget-card:nth-child(3) { animation-delay: -4s; }
+@keyframes subtleFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.budget-card::after { content: 'Click to Select →'; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); font-family: 'DM Mono', monospace; font-size: 1rem; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); color: #fff; white-space: nowrap; }
+.budget-card:hover { background: var(--text); color: #fff; border-color: var(--text); transform: translateY(-12px); box-shadow: 0 30px 80px rgba(0,0,0,0.2), 0 0 60px rgba(184,134,11,0.4), 0 0 90px rgba(184,134,11,0.2); animation: none; }
+.budget-card:hover::after { opacity: 1; }
 .budget-card:hover .budget-icon, .budget-card:hover .budget-label { color: rgba(255,255,255,0.5); }
 .budget-card:hover .budget-people { background: rgba(255,255,255,0.15); color: #fff; }
 .budget-icon { font-size: 4rem; margin-bottom: 1.5rem; color: var(--gold); transition: all 0.3s; animation: gentleFloat 4s ease-in-out infinite; }
@@ -88,7 +144,7 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 .budget-card:nth-child(3) .budget-icon { animation-delay: 1s; }
 .budget-label { font-family: 'DM Mono', monospace; font-size: 1.1rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; transition: color 0.3s; }
 .budget-amount { font-family: 'Playfair Display', serif; font-size: 3.2rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 1.5rem; }
-.budget-people { font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 500; color: var(--text); background: #f5f5f5; padding: 14px 20px; border-radius: 4px; transition: all 0.3s; }
+.budget-people { font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 500; color: var(--text); background: #f5f5f5; padding: 14px 20px; border-radius: 4px; transition: all 0.3s; margin-bottom: 40px; }
 .budget-people-num { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; display: block; margin-bottom: 4px; }
 
 /* COLLECTION */
@@ -101,7 +157,12 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 .budget-label-small { font-family: 'DM Mono', monospace; font-size: 0.9rem; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.7; }
 .budget-remaining { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; }
 .budget-remaining.negative { color: var(--accent); background: #fff; padding: 14px 24px; margin: -14px -24px; border-radius: 4px; }
-.grid-wrap { flex: 1; overflow-y: auto; padding: 28px 36px 100px 36px; background: #fafafa; }
+.grid-wrap { flex: 1; overflow-y: auto; padding: 28px 36px 100px 36px; background: #fafafa; position: relative; }
+
+/* Collection instruction banner */
+.collection-instruction { background: #fafafa; border: 1px solid var(--light); padding: 14px 24px; margin-bottom: 24px; text-align: center; }
+.collection-instruction-text { font-family: 'DM Mono', monospace; font-size: 1.1rem; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; }
+
 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1200px; margin: 0 auto; }
 .card { cursor: pointer; transition: all 0.3s; position: relative; background: #fff; display: flex; flex-direction: column; }
 .card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
@@ -120,16 +181,25 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 .card-estimate-label { font-family: 'DM Mono', monospace; font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
 .card-estimate { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: var(--text); margin-bottom: 10px; }
 .card-spacer { flex: 1; }
-.card-add-btn { padding: 12px 14px; background: transparent; border: 1px solid var(--text); font-family: 'DM Mono', monospace; font-size: 0.95rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.3s; width: 100%; font-weight: 500; margin-top: auto; }
-.card-add-btn:hover { background: var(--text); color: #fff; }
+.card-add-btn { padding: 12px 14px; background: transparent; border: 1px solid var(--text); font-family: 'DM Mono', monospace; font-size: 0.95rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.3s; width: 100%; font-weight: 500; margin-top: auto; position: relative; }
+.card-add-btn::before { content: '+'; position: absolute; left: 14px; opacity: 1; transition: all 0.3s; font-size: 1.2rem; font-weight: 400; }
+.card-add-btn::after { content: '→'; position: absolute; right: 14px; opacity: 0; transition: all 0.3s; }
+.card-add-btn:hover { background: var(--text); color: #fff; padding-left: 40px; }
+.card-add-btn:hover::before { opacity: 0; }
+.card-add-btn:hover::after { opacity: 1; right: 14px; }
 .card.selected .card-add-btn { background: var(--green); color: #fff; border-color: var(--green); }
+.card.selected .card-add-btn::before { content: '✓'; }
 
 .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--text); color: #fff; padding: 20px 36px; display: flex; justify-content: space-between; align-items: center; transform: translateY(100%); transition: transform 0.4s; z-index: 50; }
-.bottom-bar.show { transform: translateY(0); }
+.bottom-bar.show { transform: translateY(0); animation: slideUpPulse 0.6s ease-out; }
+@keyframes slideUpPulse { 0% { transform: translateY(100%); } 60% { transform: translateY(-5px); } 100% { transform: translateY(0); } }
 .bar-info { font-family: 'DM Mono', monospace; font-size: 1.4rem; }
 .bar-info strong { font-weight: 600; }
-.btn-checkout { padding: 18px 50px; background: #fff; color: var(--text); border: none; font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: all 0.3s; }
-.btn-checkout:hover { background: #f0f0f0; transform: scale(1.02); }
+.bar-hint { font-family: 'DM Mono', monospace; font-size: 0.9rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 255, 255, 0.5); margin-left: 24px; animation: subtlePulse 2s ease-in-out infinite; }
+.btn-checkout { padding: 18px 50px; background: #fff; color: var(--text); border: none; font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
+.btn-checkout::after { content: '→'; position: absolute; right: 20px; opacity: 0; transform: translateX(-10px); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); font-size: 1.4rem; }
+.btn-checkout:hover { background: #f8f8f8; transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.15), 0 0 40px rgba(184,134,11,0.3); padding-right: 70px; }
+.btn-checkout:hover::after { opacity: 1; transform: translateX(0); }
 
 /* MODAL */
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: center; justify-content: center; padding: 24px; }
@@ -175,11 +245,12 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 .modal-btn.fill.added { background: var(--green); }
 
 /* BIDDING - IMPROVED LAYOUT */
-.bidding-section { min-height: 100vh; display: flex; flex-direction: column; background: #fafafa; }
+.bidding-section { min-height: 100vh; display: flex; flex-direction: column; background: #fafafa; position: relative; }
 .bidding-header { padding: 28px 36px; text-align: center; background: #fff; border-bottom: 1px solid var(--light); flex-shrink: 0; }
+.bidding-step-indicator { display: inline-block; margin-bottom: 12px; }
 .bidding-title { font-family: 'Playfair Display', serif; font-size: clamp(2.8rem, 5vw, 4rem); font-weight: 900; letter-spacing: -0.02em; margin-bottom: 10px; }
-.bidding-subtitle { font-family: 'DM Mono', monospace; font-size: 1.3rem; color: #666; }
-.bidding-container { flex: 1; overflow-y: auto; padding: 36px; display: flex; justify-content: center; align-items: flex-start; }
+.bidding-subtitle { font-family: 'DM Mono', monospace; font-size: 1.3rem; color: #666; max-width: 600px; margin: 0 auto; }
+.bidding-container { flex: 1; overflow-y: auto; padding: 36px; display: flex; justify-content: center; align-items: flex-start; position: relative; }
 .bid-panel { background: #fff; border: 1px solid var(--light); max-width: 1000px; width: 100%; display: flex; }
 .bid-img-section { flex: 0 0 45%; background: #f8f8f8; display: flex; align-items: center; justify-content: center; padding: 36px; border-right: 1px solid var(--light); }
 .bid-img { max-width: 100%; max-height: 380px; object-fit: contain; }
@@ -188,9 +259,12 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 .bid-lot { font-family: 'DM Mono', monospace; font-size: 1rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
 .bid-artwork-title { font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 900; margin-bottom: 6px; line-height: 1.15; }
 .bid-artwork-artist { font-family: 'DM Mono', monospace; font-size: 1.2rem; color: var(--muted); }
-.estimate-display { background: #fafafa; border: 1px solid var(--light); padding: 16px 20px; margin-bottom: 24px; text-align: center; }
-.estimate-label { font-family: 'DM Mono', monospace; font-size: 0.9rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-.estimate-value { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; }
+
+/* Estimate guide box */
+.estimate-display { background: #fafafa; border: 1px solid var(--light); padding: 20px 24px; margin-bottom: 24px; text-align: center; }
+.estimate-label { font-family: 'DM Mono', monospace; font-size: 1rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+.estimate-value { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; }
+.estimate-hint { font-family: 'DM Mono', monospace; font-size: 1rem; color: var(--muted); margin-top: 8px; font-weight: 300; }
 
 .slider-section { background: #fff; border: 1px solid var(--light); padding: 24px; margin-bottom: 24px; }
 .slider-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; text-align: center; margin-bottom: 6px; }
@@ -210,6 +284,9 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 .actual-marker.show { display: block; }
 .actual-label { position: absolute; bottom: 56px; left: 50%; transform: translateX(-50%); font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: 700; color: #fff; white-space: nowrap; background: var(--accent); padding: 6px 12px; }
 
+/* Drag hint */
+.drag-hint { font-family: 'DM Mono', monospace; font-size: 1rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-top: 12px; text-align: center; animation: subtlePulse 2s ease-in-out infinite; }
+
 .feedback { padding: 20px; margin-bottom: 24px; display: none; text-align: center; border: 1px solid var(--light); }
 .feedback.show { display: block; }
 .feedback.correct { background: #e8f5e9; border-color: var(--green); }
@@ -222,8 +299,12 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 .feedback-pct { font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 500; }
 
 .bid-actions { display: flex; gap: 16px; margin-top: auto; padding-top: 20px; border-top: 1px solid var(--light); }
-.bid-btn { flex: 1; padding: 20px; border: none; font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; background: var(--text); color: #fff; transition: all 0.3s; }
-.bid-btn:hover { background: #333; }
+.bid-btn { flex: 1; padding: 20px; border: none; font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; background: var(--text); color: #fff; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
+.bid-btn::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(184,134,11,0.2) 0%, transparent 70%); opacity: 0; transition: opacity 0.3s; }
+.bid-btn::after { content: '→'; position: absolute; right: 20px; top: 50%; transform: translateY(-50%) translateX(-10px); opacity: 0; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); font-size: 1.4rem; }
+.bid-btn:hover::before { opacity: 1; }
+.bid-btn:hover { background: #000; transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 40px rgba(184,134,11,0.3); padding-right: 55px; }
+.bid-btn:hover::after { opacity: 1; transform: translateY(-50%) translateX(0); }
 .bid-btn.next-btn { background: var(--green); }
 .bid-btn.next-btn:hover { background: #156b4d; }
 
@@ -249,7 +330,7 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 .payment-steps { font-family: 'DM Mono', monospace; font-size: 1.1rem; color: var(--muted); }
 
 /* RECEIPT */
-.receipt-section { min-height: 100vh; padding: 40px 24px 80px; background: #fafafa; }
+.receipt-section { min-height: 100vh; padding: 40px 24px 80px; background: #fafafa; position: relative; }
 .receipt-section .section-header { padding: 40px 24px 30px; }
 .receipt-container { max-width: 620px; margin: 0 auto; }
 .receipt-paper { background: #fff; border: 1px solid var(--light); padding: 44px; margin-bottom: 28px; position: relative; overflow: hidden; }
@@ -265,10 +346,15 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 .receipt-fee { background: #fafafa; padding: 16px; margin: 18px 0; font-family: 'DM Mono', monospace; font-size: 1.1rem; }
 .receipt-total { display: flex; justify-content: space-between; font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 900; padding: 24px 0; border-top: 2px solid var(--text); border-bottom: 2px dashed var(--text); }
 
-.freeport-btn { display: block; width: 100%; background: var(--text); color: #fff; text-align: center; padding: 22px; font-family: 'DM Mono', monospace; font-size: 1.2rem; letter-spacing: 0.2em; text-transform: uppercase; border: none; cursor: pointer; margin-top: 28px; transition: all 0.3s; font-weight: 500; position: relative; overflow: hidden; }
-.freeport-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); animation: btnShine 2s ease-in-out infinite; }
-@keyframes btnShine { 0%, 100% { left: -100%; } 50% { left: 100%; } }
-.freeport-btn:hover { background: #333; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+/* Freeport button - clearer tax avoidance messaging */
+.freeport-btn { display: block; width: 100%; background: linear-gradient(135deg, var(--green) 0%, #156b4d 100%); color: #fff; text-align: center; padding: 24px; font-family: 'DM Mono', monospace; font-size: 1.2rem; letter-spacing: 0.2em; text-transform: uppercase; border: none; cursor: pointer; margin-top: 28px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); font-weight: 500; position: relative; overflow: hidden; animation: buttonGlowPulse 3s ease-in-out infinite; }
+.freeport-btn-subtitle { display: block; font-size: 1rem; letter-spacing: 0.1em; opacity: 0.8; margin-top: 6px; font-weight: 300; }
+@keyframes buttonGlowPulse { 0%, 100% { box-shadow: 0 0 20px rgba(26,127,90,0.4); } 50% { box-shadow: 0 0 35px rgba(26,127,90,0.6); } }
+.freeport-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: left 0.6s; }
+.freeport-btn::after { content: '→'; position: absolute; right: 24px; top: 50%; transform: translateY(-50%) translateX(-10px); opacity: 0; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); font-size: 1.6rem; }
+.freeport-btn:hover { transform: translateY(-2px); box-shadow: 0 15px 40px rgba(0,0,0,0.3), 0 0 70px rgba(26,127,90,0.7); padding-right: 70px; animation: none; }
+.freeport-btn:hover::before { left: 100%; }
+.freeport-btn:hover::after { opacity: 1; transform: translateY(-50%) translateX(0); }
 .receipt-footer { text-align: center; padding-top: 28px; border-top: 2px dashed #ddd; margin-top: 28px; font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 300; color: var(--muted); line-height: 1.9; }
 
 .comparison-section { margin-bottom: 32px; background: #fff; border: 1px solid var(--light); padding: 36px; }
@@ -296,19 +382,24 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 .tax-savings-desc { font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 300; color: #555; position: relative; z-index: 1; }
 
 .receipt-actions { display: flex; flex-direction: column; gap: 14px; }
-.receipt-btn { width: 100%; padding: 22px; border: none; font-family: 'DM Mono', monospace; font-size: 1.3rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; }
-.receipt-btn.primary { background: var(--text); color: #fff; }
-.receipt-btn.primary::before { content: '→'; position: absolute; right: 24px; top: 50%; transform: translateY(-50%); font-size: 1.6rem; opacity: 0; transition: all 0.3s; }
-.receipt-btn.primary:hover { padding-right: 50px; }
-.receipt-btn.primary:hover::before { opacity: 1; right: 20px; }
-.receipt-btn.primary:hover { background: #333; }
+.receipt-btn { width: 100%; padding: 22px; border: none; font-family: 'DM Mono', monospace; font-size: 1.3rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
+.receipt-btn.primary { background: var(--text); color: #fff; animation: buttonGlowPulse 3s ease-in-out infinite; }
+.receipt-btn.primary::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(184,134,11,0.25) 0%, transparent 70%); opacity: 0; transition: opacity 0.4s; }
+.receipt-btn.primary::after { content: '→'; position: absolute; right: 24px; top: 50%; transform: translateY(-50%) translateX(-10px); font-size: 1.6rem; opacity: 0; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+.receipt-btn.primary:hover::before { opacity: 1; }
+.receipt-btn.primary:hover { padding-right: 60px; background: #000; transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 60px rgba(184,134,11,0.6), 0 0 80px rgba(184,134,11,0.3); animation: none; }
+.receipt-btn.primary:hover::after { opacity: 1; transform: translateY(-50%) translateX(0); }
+.receipt-btn.primary:hover::after { opacity: 1; transform: translateY(-50%) translateX(0); }
 .receipt-btn.outline { background: transparent; border: 2px solid var(--light); color: var(--muted); font-size: 1.1rem; padding: 18px; }
-.receipt-btn.outline:hover { border-color: var(--text); color: var(--text); }
+.receipt-btn.outline:hover { border-color: var(--text); color: var(--text); background: rgba(17,17,17,0.02); }
 
 /* FREEPORT MODAL */
 .freeport-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 300; display: none; align-items: center; justify-content: center; padding: 24px; }
 .freeport-modal.show { display: flex; }
-.freeport-panel { background: #fff; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; }
+.freeport-panel { background: #fff; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; }
+.freeport-scroll-hint { position: sticky; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(255,255,255,0.98)); padding: 24px; text-align: center; pointer-events: none; transition: opacity 0.5s; }
+.freeport-scroll-hint .scroll-text { font-family: 'DM Mono', monospace; font-size: 1rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text); font-weight: 500; }
+.freeport-scroll-hint .scroll-arrow { width: 24px; height: 24px; border-right: 3px solid var(--text); border-bottom: 3px solid var(--text); transform: rotate(45deg); margin: 10px auto 0; animation: gentleBounce 2s ease-in-out infinite; }
 .shipping-header { background: var(--text); color: #fff; padding: 36px; text-align: center; }
 .shipping-header h2 { font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 700; margin-bottom: 10px; }
 .shipping-header p { font-family: 'DM Mono', monospace; font-size: 1.2rem; opacity: 0.8; }
@@ -341,7 +432,7 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 .freeport-close:hover { background: #333; }
 
 /* TAX GUIDE */
-.tax-section { min-height: 100vh; padding: 0 24px 60px; }
+.tax-section { min-height: 100vh; padding: 0 24px 60px; position: relative; }
 .tax-container { max-width: 680px; margin: 0 auto; }
 .tax-calculation-display { background: #fff; border: 1px solid var(--light); padding: 36px 44px; margin-bottom: 36px; position: relative; overflow: hidden; }
 .tax-calculation-display::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--accent), var(--green), var(--accent)); background-size: 200% 100%; animation: taxCalcShine 4s linear infinite; }
@@ -369,10 +460,11 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 .tax-cta { text-align: center; margin-top: 40px; }
 
 @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 20px; } .bid-panel { flex-direction: column; } .bid-img-section { border-right: none; border-bottom: 1px solid var(--light); } }
-@media (max-width: 600px) { .budget-grid { flex-direction: column; } .grid { grid-template-columns: 1fr; } .modal-body { grid-template-columns: 1fr; } .comparison-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .budget-grid { flex-direction: column; } .grid { grid-template-columns: 1fr; } .modal-body { grid-template-columns: 1fr; } .comparison-grid { grid-template-columns: 1fr; } .scroll-indicator { display: none; } }
 </style>
 </head>
 <body>
+
 
 <div class="payment-overlay" id="paymentOverlay">
 <div class="payment-card">
@@ -390,10 +482,11 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 <div class="gold-glow" id="goldGlow"></div>
 <h1><span class="word">The</span> <span class="word">Art</span> <span class="word">Market</span></h1>
 <div class="intro-label">Simulator</div>
-<div class="intro-subtitle">Experience Hoarding at the Highest Level</div>
+<div class="intro-subtitle">Experience the mechanics of cultural hoarding</div>
 <div class="money-display">$<span class="money-counter" id="moneyCounter">0</span></div>
 <div class="intro-stat-label">Global Art Market 2024</div>
 <button class="btn" onclick="goTo('budget')">Enter the Market</button>
+<div class="next-arrow next-arrow-up" style="margin-top: 24px;"><span class="arrow">↑</span><span class="arrow">↑</span><span class="arrow">↑</span></div>
 </div>
 </div>
 
@@ -402,6 +495,7 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 <div class="budget-section">
 <div class="section-header">
 <h2 class="section-main-title">How to Manipulate the Market</h2>
+<p class="section-description">A concentrated market controlled by a small elite</p>
 </div>
 <div class="charts-row">
 <div class="chart-card">
@@ -442,8 +536,11 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 <div class="market-context">
 <p>A concentrated market controlled by a small elite of collectors, dealers, and auction houses. Despite its prominence, the majority of the market is composed of a small collection of dealers and auctioneers catering to an exclusive list of ultra-rich clientele. Of the ten highest priced sales in 2020, eight occurred at either Christie's or Sotheby's.</p>
 </div>
-<h2 class="wealth-tier-title">Select Your Wealth Tier</h2>
-<div class="budget-instruction">Click to select your budget</div>
+<div class="section-header" style="margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--light);">
+<h2 class="section-main-title">Select Your Tax Bracket</h2>
+<p class="section-description">Choose your wealth tier to begin</p>
+</div>
+<div class="next-arrow next-arrow-down" style="margin-bottom: 30px;"><span class="arrow">↓</span><span class="arrow">↓</span><span class="arrow">↓</span></div>
 <div class="budget-grid">
 <div class="budget-card" onclick="selectBudget(100000000)">
 <div class="budget-icon">◇</div>
@@ -465,6 +562,10 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 </div>
 </div>
 </div>
+<div class="scroll-indicator">
+<div class="scroll-text">scroll</div>
+<div class="scroll-arrow"></div>
+</div>
 </div>
 
 <div class="level" id="collection">
@@ -473,8 +574,8 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 <div class="header-left">
 <button class="back-btn" style="position:static" onclick="goTo('budget')">← Back</button>
 <div>
-<div class="collection-title">Shop the Collection</div>
-<div class="collection-subtitle">View estimates — Guess actual sale prices in next step</div>
+<div class="collection-title">Build Your Collection</div>
+<div class="collection-subtitle">Browse artworks and add to your cart</div>
 </div>
 </div>
 <div class="budget-display">
@@ -482,12 +583,24 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 <div class="budget-remaining" id="budgetRemaining">£100,000,000</div>
 </div>
 </div>
-<div class="grid-wrap"><div class="grid" id="grid"></div></div>
+<div class="grid-wrap">
+<div class="collection-instruction">
+<span class="collection-instruction-text">Click artwork to view details · Click button to add to cart</span>
+</div>
+<div class="grid" id="grid"></div>
+<div class="scroll-indicator">
+<div class="scroll-text">scroll for more</div>
+<div class="scroll-arrow"></div>
+</div>
+</div>
 </div>
 </div>
 
 <div class="bottom-bar" id="bottomBar">
+<div style="display: flex; align-items: center;">
 <div class="bar-info"><strong><span id="selectedCount">0</span> items</strong> selected for auction</div>
+<div class="bar-hint">Ready to bid? →</div>
+</div>
 <button class="btn-checkout" onclick="startBidding()">Proceed to Auction</button>
 </div>
 
@@ -531,8 +644,8 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 <button class="back-btn" onclick="goTo('collection')">← Back</button>
 <div class="bidding-section">
 <div class="bidding-header">
-<h1 class="bidding-title">Guess the Sale Price</h1>
-<p class="bidding-subtitle">You selected these artworks. Now predict what they actually sold for at auction.</p>
+<h1 class="bidding-title">How Much Is It Worth?</h1>
+<p class="bidding-subtitle">Use the auction estimate as your guide. Drag the slider to guess the final sale price, then submit to see if you were right.</p>
 </div>
 <div class="bidding-container">
 <div class="bid-panel">
@@ -544,12 +657,13 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 <div class="bid-artwork-artist" id="bidArtist"></div>
 </div>
 <div class="estimate-display">
-<div class="estimate-label">Pre-Auction Estimate</div>
+<div class="estimate-label">Auction Estimate</div>
 <div class="estimate-value" id="bidEstimate"></div>
+<div class="estimate-hint">Use this as your guide</div>
 </div>
 <div class="slider-section">
-<div class="slider-title">What was the final auction price?</div>
-<div class="slider-helper">Drag the slider to make your guess</div>
+<div class="slider-title">What Did It Actually Sell For?</div>
+<div class="slider-helper">Move the slider to make your guess</div>
 <div class="slider-range-labels">
 <span class="range-label"><span class="range-label-title">Min</span><span id="rangeMin">£0</span></span>
 <span class="range-label"><span class="range-label-title">Max</span><span id="rangeMax">£0</span></span>
@@ -560,13 +674,19 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 <div class="actual-marker" id="actualMarker"><span class="actual-label" id="actualLabel">SOLD</span></div>
 </div>
 </div>
+<div class="drag-hint">Drag to guess the final price</div>
 </div>
 <div class="feedback" id="feedback"><div class="feedback-title" id="feedTitle"></div><div class="feedback-msg" id="feedMsg"></div><div class="feedback-real-price" id="feedRealPrice"></div><div class="feedback-pct" id="feedPct"></div></div>
 <div class="bid-actions">
 <button class="bid-btn" id="bidBtn" onclick="submitBid()">Submit Guess</button>
 <button class="bid-btn next-btn" id="nextBtn" onclick="nextBid()" style="display:none">Next Artwork</button>
 </div>
+<div class="next-arrow" id="submitArrow"><span class="arrow">→</span><span class="arrow">→</span><span class="arrow">→</span><span style="margin-left: 8px;">Then submit</span></div>
 </div>
+</div>
+<div class="scroll-indicator">
+<div class="scroll-text">scroll</div>
+<div class="scroll-arrow"></div>
 </div>
 </div>
 </div>
@@ -575,18 +695,23 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 <div class="level" id="receipt">
 <button class="back-btn" onclick="goTo('collection')">← Back</button>
 <div class="receipt-section">
-<div class="section-header"><h2 class="section-main-title">Your Purchase Receipt</h2></div>
+<div class="section-header">
+<h2 class="section-main-title">Your Purchase Receipt</h2>
+<p class="section-description">Review what you bought and learn how to avoid taxes</p>
+</div>
 <div class="receipt-container">
 <div class="receipt-paper">
 <div class="receipt-header">
 <div class="receipt-logo">Order Confirmed</div>
-<div class="receipt-date" id="receiptDate">26 December 2025</div>
 </div>
 <div id="receiptItems"></div>
 <div class="receipt-subtotal"><div class="receipt-item"><span>Subtotal</span><span class="price" id="subAmt">£0</span></div></div>
 <div class="receipt-fee"><div class="receipt-item" style="border:none"><span>Buyer's Premium (25%)</span><span class="price" id="premAmt">£0</span></div></div>
 <div class="receipt-total"><span>Total</span><span id="totalAmt">£0</span></div>
-<button class="freeport-btn" onclick="showFreeport()">Ship to Freeport — Avoid Taxes</button>
+<button class="freeport-btn" onclick="showFreeport()">
+Ship to Tax-Free Freeport
+<span class="freeport-btn-subtitle">Avoid all taxes on your purchase</span>
+</button>
 <div class="receipt-footer">Your objects will be stored tax-free in permanent transit.<br>Public visibility: 3–7 days before private storage.</div>
 </div>
 <div class="comparison-section">
@@ -602,18 +727,26 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 <div class="tax-savings-desc">37% of your purchase through legal loopholes</div>
 </div>
 <div class="receipt-actions">
-<button class="receipt-btn primary" onclick="goTo('taxguide')">Learn How to Avoid Taxes</button>
+<button class="receipt-btn primary" onclick="goTo('taxguide')">See Tax Avoidance Strategies</button>
 <button class="receipt-btn outline" onclick="restart()">Start Over</button>
 </div>
+</div>
+<div class="scroll-indicator">
+<div class="scroll-text">scroll for more</div>
+<div class="scroll-arrow"></div>
 </div>
 </div>
 </div>
 
 <div class="freeport-modal" id="freeportModal">
 <div class="freeport-panel">
-<div class="shipping-header"><h2>Shipment Confirmed</h2><p>Tax-Free Storage · Geneva Freeport, Switzerland</p></div>
+<div class="shipping-header"><h2>Tax-Free Shipment Confirmed</h2><p>Your art is now in permanent tax-free transit · Geneva Freeport, Switzerland</p></div>
 <div class="globe-container" id="globeContainer"><div id="globeViz"></div>
 <div class="transit-overlay"><div class="transit-route-label"><span class="transit-city">Art Transit Routes → Geneva Freeport</span></div></div>
+</div>
+<div class="freeport-scroll-hint">
+<div class="scroll-text">Scroll to continue</div>
+<div class="scroll-arrow"></div>
 </div>
 <div class="shipping-tracker">
 <div class="tracker-title">Transit Timeline</div>
@@ -645,8 +778,8 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 <button class="back-btn" onclick="goTo('receipt')">← Back</button>
 <div class="tax-section">
 <div class="section-header">
-<h2 class="section-main-title">The Guide Book to Avoid Taxes</h2>
-<p class="section-description">Five legal strategies the ultra-wealthy use to minimize tax obligations</p>
+<h2 class="section-main-title">Guidebook to Avoid Taxes</h2>
+<p class="section-description">Legal methods used by collectors to minimise their tax burden</p>
 </div>
 <div class="tax-container">
 <div class="tax-calculation-display">
@@ -664,7 +797,11 @@ body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--te
 <div class="tax-step"><div class="step-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div class="step-content"><div class="step-title">The Freeport Vault</div><div class="step-stat">$100B+ hidden globally</div><div class="step-text">Ship to Geneva, Singapore, or Delaware freeports. Objects remain "in transit" indefinitely—no sales tax, VAT, or import duties.</div></div></div>
 <div class="tax-step"><div class="step-icon"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M12 12h.01"/><path d="M17 12h.01"/><path d="M7 12h.01"/></svg></div><div class="step-content"><div class="step-title">The Art-Backed Loan</div><div class="step-stat">0% capital gains triggered</div><div class="step-text">Use collection as collateral for loans. Loans aren't income—no tax triggered. Access millions in liquidity while art appreciates. Never sell, never pay.</div></div></div>
 <div class="tax-step"><div class="step-icon"><svg viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg></div><div class="step-content"><div class="step-title">The Market Maker</div><div class="step-stat">Inflate your entire collection</div><div class="step-text">Donating work to a museum inflates the value of all other works by that artist. Own 50 pieces? One donation raises the value of 49.</div></div></div>
-<div class="tax-cta"><button class="btn btn-static" onclick="restart()">Shop Some More</button></div>
+<div class="tax-cta"><button class="btn btn-static" onclick="restart()">Start Again</button></div>
+<div class="scroll-indicator">
+<div class="scroll-text">scroll</div>
+<div class="scroll-arrow"></div>
+</div>
 </div>
 </div>
 </div>
@@ -736,15 +873,11 @@ function initGlobe() {
     globe.controls().enableZoom = false;
 }
 
-// Intro effects
-var introSection = document.getElementById('introSection');
+// Intro glow - position near button area
 var goldGlow = document.getElementById('goldGlow');
-if (introSection && goldGlow) {
-    introSection.addEventListener('mousemove', function(e) { 
-        var rect = introSection.getBoundingClientRect(); 
-        goldGlow.style.left = (e.clientX - rect.left) + 'px'; 
-        goldGlow.style.top = (e.clientY - rect.top) + 'px'; 
-    });
+if (goldGlow) {
+    goldGlow.style.left = '50%';
+    goldGlow.style.top = '70%';
 }
 
 function animateCounter() { 
@@ -801,6 +934,7 @@ function goTo(id) {
     document.querySelectorAll('.level').forEach(function(l) { l.classList.remove('active'); });
     document.getElementById(id).classList.add('active');
     setTimeout(function() { document.getElementById(id).scrollTop = 0; }, 50);
+    
     if (id === 'taxguide') { 
         var tot = buys.reduce(function(s, w) { return s + w.p; }, 0);
         var prem = tot * 0.25, fin = tot + prem, tax = fin * 0.37; 
@@ -814,7 +948,7 @@ function goTo(id) {
 function selectBudget(amt) { 
     budget = amt; 
     document.getElementById('budgetRemaining').textContent = fmtFull(budget); 
-    playSound('add'); // Money sound for selecting budget
+    playSound('add');
     loadGrid(); 
     goTo('collection'); 
 }
@@ -850,7 +984,7 @@ function toggleSelect(i) {
         selected.push(i); 
         card.classList.add('selected'); 
         budget -= a.p; 
-        playSound('add'); // Money sound only when ADDING to cart
+        playSound('add');
     }
     document.getElementById('budgetRemaining').textContent = fmtFull(budget);
     document.getElementById('budgetRemaining').classList.toggle('negative', budget < 0);
@@ -901,7 +1035,7 @@ function toggleFromModal() {
 
 function startBidding() { 
     if (!selected.length) return; 
-    playSound('checkout'); // Money sound for checkout
+    playSound('checkout');
     queue = selected.slice(); 
     idx = 0; 
     buys = []; 
@@ -932,6 +1066,12 @@ function showBid() {
     document.getElementById('feedback').classList.remove('show', 'correct', 'wrong');
     document.getElementById('bidBtn').style.display = 'block'; 
     document.getElementById('nextBtn').style.display = 'none';
+    
+    // Show drag hint and submit arrow
+    var dragHint = document.querySelector('.drag-hint');
+    var submitArrow = document.getElementById('submitArrow');
+    if (dragHint) dragHint.style.display = 'block';
+    if (submitArrow) submitArrow.style.display = 'flex';
 }
 
 document.addEventListener('DOMContentLoaded', function() { 
@@ -950,6 +1090,13 @@ function submitBid() {
     marker.style.left = actualPct + '%'; 
     document.getElementById('actualLabel').textContent = 'SOLD: ' + fmtCurrency(a.p, a.currency); 
     marker.classList.add('show');
+    
+    // Hide drag hint and submit arrow after submission
+    var dragHint = document.querySelector('.drag-hint');
+    var submitArrow = document.getElementById('submitArrow');
+    if (dragHint) dragHint.style.display = 'none';
+    if (submitArrow) submitArrow.style.display = 'none';
+    
     var fb = document.getElementById('feedback'), diff = Math.abs(currentBid - a.p), pct = Math.round(diff / a.p * 100);
     document.getElementById('feedRealPrice').textContent = fmtCurrency(a.p, a.currency);
     if (pct <= 15) { 
@@ -957,7 +1104,7 @@ function submitBid() {
         document.getElementById('feedTitle').textContent = 'Excellent guess!'; 
         document.getElementById('feedMsg').textContent = 'Final auction price:'; 
         document.getElementById('feedPct').textContent = 'Only ' + pct + '% off'; 
-        playSound('success'); // Money sound for correct guess
+        playSound('success');
     } else if (currentBid < a.p) { 
         fb.className = 'feedback show wrong'; 
         document.getElementById('feedTitle').textContent = 'Too Low'; 
@@ -1024,7 +1171,7 @@ function showPayment() {
             icon.className = 'payment-icon success'; 
             title.textContent = 'Payment Confirmed'; 
             text.textContent = 'Your acquisition has been processed'; 
-            playSound('success'); // Money sound for payment success
+            playSound('success');
             setTimeout(function() { 
                 overlay.classList.remove('show'); 
                 icon.className = 'payment-icon'; 
@@ -1070,7 +1217,21 @@ function showFreeport() {
     setTimeout(function() { 
         document.getElementById('trackerFill').style.height = '66%'; 
         document.getElementById('step3').classList.add('active'); 
-    }, 2000); 
+    }, 2000);
+    
+    // Hide scroll hint after user scrolls
+    var panel = document.querySelector('.freeport-panel');
+    var hint = document.querySelector('.freeport-scroll-hint');
+    if (panel && hint) {
+        panel.addEventListener('scroll', function() {
+            if (panel.scrollTop > 50) {
+                hint.style.opacity = '0';
+                hint.style.pointerEvents = 'none';
+            } else {
+                hint.style.opacity = '1';
+            }
+        });
+    }
 }
 
 function closeFreeport() { 
